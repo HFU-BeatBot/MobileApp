@@ -9,19 +9,19 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
+import com.theriotjoker.beatbot.databinding.FragmentSecondBinding;
 
-public class FirstFragment extends Fragment {
+public class UseFileScreen extends Fragment {
 
-    private FragmentFirstBinding binding;
+    private FragmentSecondBinding binding;
 
     @Override
     public View onCreateView(
-            LayoutInflater inflater, ViewGroup container,
+            @NonNull LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
 
-        binding = FragmentFirstBinding.inflate(inflater, container, false);
+        binding = FragmentSecondBinding.inflate(inflater, container, false);
         return binding.getRoot();
 
     }
@@ -29,13 +29,8 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
-            }
-        });
+        binding.buttonSecond.setOnClickListener(view1 -> NavHostFragment.findNavController(UseFileScreen.this)
+                .navigate(R.id.fileScreenToMainScreen));
     }
 
     @Override

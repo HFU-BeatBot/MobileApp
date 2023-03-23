@@ -2,11 +2,15 @@
     <string name="app_name">BeatBot</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
+    <string name="first_fragment_label">BeatBot</string>
+    <string name="second_fragment_label">BeatBot</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="evaluate">Evaluate!</string>
+    <string name="upload_a_file">Use a file</string>
+    <string name="bb">BB</string>
+    <string name="beatBot">BeatBot</string>
 </resources>

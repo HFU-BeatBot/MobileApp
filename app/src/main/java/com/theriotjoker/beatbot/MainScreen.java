@@ -1,10 +1,14 @@
 package com.theriotjoker.beatbot;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.drawable.AnimationDrawable;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -13,66 +17,67 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
 
 import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 
 public class MainScreen extends Fragment {
 
     private FragmentFirstBinding binding;
     private ActivityResultLauncher<Intent> startActivityIntent;
-
+    private MediaRecorder mediaRecorder;
+    private boolean isRecording;
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
+
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if (result.getResultCode() == Activity.RESULT_OK) {
-                            Intent data = result.getData();
-                            System.out.println(data.getData().getPath());
-                            try {
-                                InputStream is = getActivity().getApplicationContext().getContentResolver().openInputStream(data.getData());
-                            } catch (FileNotFoundException e) {
-                                System.out.println(e.getMessage());
-                            }
-                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
-                            alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+" do you want to upload it?")
-                                    .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            dialogInterface.dismiss();
-                                        }
-                                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            dialogInterface.dismiss();
-                                        }
-                                    });
-                            AlertDialog messageDialog = alertDialogBuilder.create();
-                            messageDialog.show();
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        System.out.println(data.getData().getPath());
+                        try (InputStream is = requireActivity().getApplicationContext().getContentResolver().openInputStream(data.getData())) {
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
+
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+                        alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+" do you want to upload it?")
+                                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        dialogInterface.dismiss();
+                                    }
+                                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        dialogInterface.dismiss();
+                                    }
+                                });
+                        AlertDialog messageDialog = alertDialogBuilder.create();
+                        messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
+                        messageDialog.show();
                     }
                 });
+
+        if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 30000);
+        }
+        isRecording = false;
         return binding.getRoot();
     }
 
@@ -81,7 +86,7 @@ public class MainScreen extends Fragment {
         Cursor cursor = null;
         try {
             String[] projectionofTable = {MediaStore.Images.Media.DISPLAY_NAME};
-            cursor = getActivity().getContentResolver().query(uri, projectionofTable, null, null);
+            cursor = requireActivity().getContentResolver().query(uri, projectionofTable, null, null);
             if(cursor != null && cursor.moveToFirst()) {
                 int columnIndexOfName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
                 returnValue = cursor.getString(columnIndexOfName);
@@ -99,12 +104,41 @@ public class MainScreen extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        AnimationDrawable animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
+        animationDrawable.setEnterFadeDuration(10);
+        animationDrawable.setExitFadeDuration(1750);
+        requireView().setBackground(animationDrawable);
         //NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen)
         binding.useFileButton.setOnClickListener(view1 -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT); //Create an intent to get a file from the filesystem
             intent.setType("audio/mpeg"); //the file should be of the type .mp3 (actual name mpeg)
             startActivityIntent.launch(intent);
 
+        });
+
+        binding.bbButton.setOnClickListener(view2 -> {
+            File f = new File(requireActivity().getCacheDir(), "temp.mp4");
+            if(isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.reset();
+                mediaRecorder.release();
+                System.out.println("DOES THE RECORDED FILE EXIST? "+f.exists()+ " info = ");
+                animationDrawable.stop();
+            } else {
+                animationDrawable.start();
+                mediaRecorder = new MediaRecorder();
+                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                mediaRecorder.setOutputFile(f);
+                try {
+                    mediaRecorder.prepare();
+                    mediaRecorder.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            isRecording = !isRecording;
         });
 
 

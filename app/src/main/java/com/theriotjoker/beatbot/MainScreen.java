@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.drawable.AnimationDrawable;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,16 +38,14 @@ public class MainScreen extends Fragment {
     private ActivityResultLauncher<Intent> startActivityIntent;
     private MediaRecorder mediaRecorder;
     private boolean isRecording;
+    private Intent chosenFileIntent;
     @Override
-    public View onCreateView(
-            @NonNull LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState
-    ) {
-
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    chosenFileIntent = result.getData();
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         Intent data = result.getData();
                         System.out.println(data.getData().getPath());
@@ -56,11 +55,24 @@ public class MainScreen extends Fragment {
                         }
 
                         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
-                        alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+" do you want to upload it?")
+                        alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+". Do you want to upload it?")
                                 .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
-                                        dialogInterface.dismiss();
+                                        //TODO remove debug
+                                        MediaPlayer mp = new MediaPlayer();
+                                        try {
+                                            mp.setDataSource(requireContext(), result.getData().getData());
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                            @Override
+                                            public void onPrepared(MediaPlayer mediaPlayer) {
+                                                mp.start();
+                                            }
+                                        });
+                                        mp.prepareAsync();
                                     }
                                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                                     @Override
@@ -138,9 +150,31 @@ public class MainScreen extends Fragment {
                     e.printStackTrace();
                 }
             }
+
             isRecording = !isRecording;
         });
+        //TODO: remove debug
+        binding.testButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MediaPlayer player = new MediaPlayer();
+                try {
+                    File file = new File(requireContext().getCacheDir(), "temp.mp4");
+                    player.setDataSource(file.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                player.prepareAsync();
+                player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mediaPlayer) {
+                        player.start();
+                    }
+                });
 
+
+            }
+        });
 
     }
 

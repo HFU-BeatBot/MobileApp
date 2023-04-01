@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/gradient_top"
     tools:context=".MainScreen">
 
     <android.widget.Button
@@ -12,6 +13,7 @@
         android:layout_height="200dp"
         android:background="@drawable/bb_button_design"
         android:text="@string/bb"
+        android:textColor="@color/textColor"
         android:textSize="75sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -19,29 +21,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <android.widget.Button
         android:id="@+id/use_file_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="30sp"
-        android:paddingEnd="30sp"
-        android:paddingTop="15sp"
-        android:paddingBottom="15sp"
         android:layout_marginTop="69dp"
-        android:textSize="19sp"
+        android:background="@drawable/select_file_button_design"
         android:text="@string/upload_a_file"
+        android:textAlignment="center"
+        android:textColor="@color/textColor"
+        android:textSize="19sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bb_button" />
+        app:layout_constraintTop_toBottomOf="@+id/bb_button"
+        app:layout_constraintVertical_bias="0.337" />
 
-    <Button
+    <android.widget.Button
         android:id="@+id/testButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="36dp"
+        android:layout_marginBottom="664dp"
+        android:background="@drawable/select_file_button_design"
         android:text="Debug/Play Sound"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

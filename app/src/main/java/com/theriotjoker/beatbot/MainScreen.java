@@ -168,11 +168,9 @@ public class MainScreen extends Fragment {
                 player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mediaPlayer) {
-                        player.start();
+                        mediaPlayer.start();
                     }
                 });
-
-
             }
         });
 

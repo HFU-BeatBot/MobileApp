@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 
@@ -66,6 +67,7 @@ public class MainScreen extends Fragment {
                                         } catch (IOException e) {
                                             throw new RuntimeException(e);
                                         }
+                                        NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen);
                                         mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                                             @Override
                                             public void onPrepared(MediaPlayer mediaPlayer) {

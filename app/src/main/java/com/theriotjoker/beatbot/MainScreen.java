@@ -67,14 +67,19 @@ public class MainScreen extends Fragment {
                                         } catch (IOException e) {
                                             throw new RuntimeException(e);
                                         }
-                                        NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen);
-                                        mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                        Bundle bundle = new Bundle();
+                                        Genre genre = new Genre("DISCO");
+                                        bundle.putSerializable("GENRE", genre);
+                                        UseFileScreen useFileScreen = new UseFileScreen();
+                                        useFileScreen.setArguments(bundle);
+                                        NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen, bundle);
+                                        /*mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                                             @Override
                                             public void onPrepared(MediaPlayer mediaPlayer) {
                                                 mp.start();
                                             }
                                         });
-                                        mp.prepareAsync();
+                                        mp.prepareAsync();*/
                                     }
                                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                                     @Override
@@ -166,13 +171,13 @@ public class MainScreen extends Fragment {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                player.prepareAsync();
+                /*player.prepareAsync();
                 player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mediaPlayer) {
                         mediaPlayer.start();
                     }
-                });
+                });*/
             }
         });
 

@@ -14,10 +14,8 @@
         <action
             android:id="@+id/mainScreenToFileScreen"
             app:destination="@id/UseFileScreen"
-            app:enterAnim="@android:anim/slide_in_left"
-            app:exitAnim="@android:anim/slide_out_right"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
     </fragment>
     <fragment
         android:id="@+id/UseFileScreen"
@@ -29,8 +27,6 @@
             android:id="@+id/fileScreenToMainScreen"
             app:destination="@id/MainScreen"
             app:enterAnim="@android:anim/slide_in_left"
-            app:exitAnim="@android:anim/slide_out_right"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+            app:exitAnim="@android:anim/slide_out_right" />
     </fragment>
 </navigation>

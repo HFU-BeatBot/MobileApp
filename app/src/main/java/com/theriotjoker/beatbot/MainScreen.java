@@ -32,6 +32,7 @@ import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 public class MainScreen extends Fragment {
 
@@ -43,6 +44,7 @@ public class MainScreen extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
+        requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -69,6 +71,7 @@ public class MainScreen extends Fragment {
                                         }
                                         Bundle bundle = new Bundle();
                                         Genre genre = new Genre("DISCO");
+
                                         bundle.putSerializable("GENRE", genre);
                                         UseFileScreen useFileScreen = new UseFileScreen();
                                         useFileScreen.setArguments(bundle);

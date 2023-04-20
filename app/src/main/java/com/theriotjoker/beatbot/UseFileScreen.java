@@ -42,7 +42,9 @@ public class UseFileScreen extends Fragment {
         genreTextView.setTextColor(genre.getTextColor());
         titleTextView.setTextColor(genre.getTextColor());
         ConstraintLayout layout = view.findViewById(R.id.resultPageLayout);
-        layout.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, genre.getColors()));
+        drawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, genre.getColors());
+        layout.setBackground(drawable);
+        requireActivity().getWindow().setBackgroundDrawable(drawable);
         binding.buttonSecond.setOnClickListener(view1 -> NavHostFragment.findNavController(UseFileScreen.this)
                 .navigate(R.id.fileScreenToMainScreen));
     }

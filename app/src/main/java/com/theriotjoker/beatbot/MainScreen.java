@@ -12,10 +12,12 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -41,6 +43,7 @@ public class MainScreen extends Fragment {
     private MediaRecorder mediaRecorder;
     private boolean isRecording;
     private Intent chosenFileIntent;
+    private final Handler handler = new Handler();
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
@@ -57,7 +60,7 @@ public class MainScreen extends Fragment {
                             throw new RuntimeException(e);
                         }
 
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext(), R.style.AlertDialogStyle);
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
                         alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+". Do you want to upload it?")
                                 .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                                     @Override
@@ -70,8 +73,8 @@ public class MainScreen extends Fragment {
                                             throw new RuntimeException(e);
                                         }
                                         Bundle bundle = new Bundle();
-                                        Genre genre = new Genre("HIPHOP");
-
+                                        String[] genres = {"BLUES", "CLASSICAL", "ROCK", "POP", "DISCO", "METAL", "HIPHOP", "JAZZ", "COUNTRY", "REGGAE"};
+                                        Genre genre = new Genre(genres[(new java.util.Random().nextInt(genres.length))]);
                                         bundle.putSerializable("GENRE", genre);
                                         UseFileScreen useFileScreen = new UseFileScreen();
                                         useFileScreen.setArguments(bundle);
@@ -91,7 +94,7 @@ public class MainScreen extends Fragment {
                                     }
                                 });
                         AlertDialog messageDialog = alertDialogBuilder.create();
-                        messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
+                        //messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
                         messageDialog.show();
                     }
                 });
@@ -141,13 +144,19 @@ public class MainScreen extends Fragment {
         binding.bbButton.setOnClickListener(view2 -> {
             File f = new File(requireActivity().getCacheDir(), "temp.mp4");
             if(isRecording) {
+
                 mediaRecorder.stop();
                 mediaRecorder.reset();
                 mediaRecorder.release();
                 System.out.println("DOES THE RECORDED FILE EXIST? "+f.exists()+ " info = ");
+
+                stopPulsing();
                 animationDrawable.stop();
+                binding.useFileButton.setEnabled(true);
             } else {
+                binding.useFileButton.setEnabled(false);
                 animationDrawable.start();
+                startPulsing();
                 mediaRecorder = new MediaRecorder();
                 mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
                 mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -191,4 +200,34 @@ public class MainScreen extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
+    private void startPulsing() {
+        animationRunnable.run();
+    }
+
+    private void stopPulsing() {
+        handler.removeCallbacks(animationRunnable);
+    }
+
+    private final Runnable animationRunnable = new Runnable() {
+        @Override
+        public void run() {
+            ImageView pulsatingImage = binding.pulseImage1;
+            ImageView pulsatingImage2 = binding.pulseImage2;
+            float scale = 3.0f;
+            pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(1000).withEndAction(new Runnable() {
+                @Override
+                public void run() {
+                    pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0);
+                }
+            });
+            pulsatingImage2.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(700).withEndAction(new Runnable() {
+                @Override
+                public void run() {
+                    pulsatingImage2.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0);
+                }
+            });
+            handler.postDelayed(this, 1500);
+        }
+    };
 }

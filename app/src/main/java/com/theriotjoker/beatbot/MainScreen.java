@@ -91,7 +91,7 @@ public class MainScreen extends Fragment {
                                     }
                                 });
                         AlertDialog messageDialog = alertDialogBuilder.create();
-                        messageDialog.getWindow().setWindowAnimations(R.style.AlertDialogAnimation);
+                        messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
                         messageDialog.show();
                     }
                 });

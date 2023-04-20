@@ -57,7 +57,7 @@ public class MainScreen extends Fragment {
                             throw new RuntimeException(e);
                         }
 
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext(), R.style.AlertDialogStyle);
                         alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+". Do you want to upload it?")
                                 .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                                     @Override
@@ -70,7 +70,7 @@ public class MainScreen extends Fragment {
                                             throw new RuntimeException(e);
                                         }
                                         Bundle bundle = new Bundle();
-                                        Genre genre = new Genre("DISCO");
+                                        Genre genre = new Genre("HIPHOP");
 
                                         bundle.putSerializable("GENRE", genre);
                                         UseFileScreen useFileScreen = new UseFileScreen();
@@ -91,7 +91,7 @@ public class MainScreen extends Fragment {
                                     }
                                 });
                         AlertDialog messageDialog = alertDialogBuilder.create();
-                        messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
+                        messageDialog.getWindow().setWindowAnimations(R.style.AlertDialogAnimation);
                         messageDialog.show();
                     }
                 });

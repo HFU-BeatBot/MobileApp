@@ -19,14 +19,14 @@
     </fragment>
     <fragment
         android:id="@+id/UseFileScreen"
-        android:name="com.theriotjoker.beatbot.UseFileScreen"
+        android:name="com.theriotjoker.beatbot.ResultScreen"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_second">
 
         <action
             android:id="@+id/fileScreenToMainScreen"
             app:destination="@id/MainScreen"
-            app:enterAnim="@android:anim/slide_in_left"
+            app:enterAnim="@anim/slide_in_left_custom"
             app:exitAnim="@android:anim/slide_out_right" />
     </fragment>
 </navigation>

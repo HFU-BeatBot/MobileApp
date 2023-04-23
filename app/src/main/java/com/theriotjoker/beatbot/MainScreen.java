@@ -54,12 +54,6 @@ public class MainScreen extends Fragment {
                     chosenFileIntent = result.getData();
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         Intent data = result.getData();
-                        System.out.println(data.getData().getPath());
-                        try (InputStream is = requireActivity().getApplicationContext().getContentResolver().openInputStream(data.getData())) {
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-
                         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
                         alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+". Do you want to upload it?")
                                 .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
@@ -68,7 +62,11 @@ public class MainScreen extends Fragment {
                                         //TODO remove debug
                                         MediaPlayer mp = new MediaPlayer();
                                         try {
-                                            mp.setDataSource(requireContext(), result.getData().getData());
+                                            if(result.getData() != null) {
+                                                mp.setDataSource(requireContext(), result.getData().getData());
+                                            } else {
+                                                //TODO show exception
+                                            }
                                         } catch (IOException e) {
                                             throw new RuntimeException(e);
                                         }
@@ -76,8 +74,8 @@ public class MainScreen extends Fragment {
                                         String[] genres = {"BLUES", "CLASSICAL", "ROCK", "POP", "DISCO", "METAL", "HIPHOP", "JAZZ", "COUNTRY", "REGGAE"};
                                         Genre genre = new Genre(genres[(new java.util.Random().nextInt(genres.length))]);
                                         bundle.putSerializable("GENRE", genre);
-                                        UseFileScreen useFileScreen = new UseFileScreen();
-                                        useFileScreen.setArguments(bundle);
+                                        ResultScreen resultScreen = new ResultScreen();
+                                        resultScreen.setArguments(bundle);
                                         NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen, bundle);
                                         /*mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                                             @Override
@@ -132,9 +130,11 @@ public class MainScreen extends Fragment {
         //TODO setVisibility of Debug Button
         super.onViewCreated(view, savedInstanceState);
         AnimationDrawable animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
-        animationDrawable.setEnterFadeDuration(10);
-        animationDrawable.setExitFadeDuration(1750);
-        requireView().setBackground(animationDrawable);
+        if(animationDrawable != null) {
+            animationDrawable.setEnterFadeDuration(10);
+            animationDrawable.setExitFadeDuration(1750);
+            requireView().setBackground(animationDrawable);
+        }
         //NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen)
         binding.useFileButton.setOnClickListener(view1 -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT); //Create an intent to get a file from the filesystem
@@ -151,13 +151,16 @@ public class MainScreen extends Fragment {
                 mediaRecorder.reset();
                 mediaRecorder.release();
                 System.out.println("DOES THE RECORDED FILE EXIST? "+f.exists()+ " info = ");
-
                 stopPulsing();
-                animationDrawable.stop();
+                if(animationDrawable != null) {
+                    animationDrawable.stop();
+                }
                 binding.useFileButton.setEnabled(true);
             } else {
                 binding.useFileButton.setEnabled(false);
-                animationDrawable.start();
+                if(animationDrawable != null) {
+                    animationDrawable.start();
+                }
                 startPulsing();
                 mediaRecorder = new MediaRecorder();
                 mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -225,11 +228,8 @@ public class MainScreen extends Fragment {
 
     private void pulse(ImageView pulsatingImage, long duration, float scale){
         //duration describes how fast the circle expand, scale describes its maximum size.
-        pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0);
-            }
-        });
+        pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(() ->
+                pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0)
+        );
     }
 }

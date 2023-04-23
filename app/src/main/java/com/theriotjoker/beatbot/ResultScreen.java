@@ -1,8 +1,6 @@
 package com.theriotjoker.beatbot;
 
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.ShapeDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.theriotjoker.beatbot.databinding.FragmentSecondBinding;
 
-public class UseFileScreen extends Fragment {
+public class ResultScreen extends Fragment {
 
     private FragmentSecondBinding binding;
 
@@ -45,7 +43,7 @@ public class UseFileScreen extends Fragment {
         drawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, genre.getColors());
         layout.setBackground(drawable);
         requireActivity().getWindow().setBackgroundDrawable(drawable);
-        binding.buttonSecond.setOnClickListener(view1 -> NavHostFragment.findNavController(UseFileScreen.this)
+        binding.buttonSecond.setOnClickListener(view1 -> NavHostFragment.findNavController(ResultScreen.this)
                 .navigate(R.id.fileScreenToMainScreen));
     }
 

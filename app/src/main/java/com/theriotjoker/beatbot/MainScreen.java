@@ -17,6 +17,7 @@ import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -92,6 +93,7 @@ public class MainScreen extends Fragment {
                                     }
                                 });
                         AlertDialog messageDialog = alertDialogBuilder.create();
+                        Button btn = messageDialog.getButton( DialogInterface.BUTTON_NEGATIVE);
                         //messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
                         messageDialog.show();
                     }

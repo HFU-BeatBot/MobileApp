@@ -128,6 +128,8 @@ public class MainScreen extends Fragment {
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        binding.testButton.setVisibility(View.INVISIBLE);
+        //TODO setVisibility of Debug Button
         super.onViewCreated(view, savedInstanceState);
         AnimationDrawable animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
         animationDrawable.setEnterFadeDuration(10);
@@ -210,24 +212,24 @@ public class MainScreen extends Fragment {
     }
 
     private final Runnable animationRunnable = new Runnable() {
+
+        //makes the pulsing animation for the "BB" Button when recording.
         @Override
         public void run() {
-            ImageView pulsatingImage = binding.pulseImage1;
-            ImageView pulsatingImage2 = binding.pulseImage2;
-            float scale = 3.0f;
-            pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(1000).withEndAction(new Runnable() {
-                @Override
-                public void run() {
-                    pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0);
-                }
-            });
-            pulsatingImage2.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(700).withEndAction(new Runnable() {
-                @Override
-                public void run() {
-                    pulsatingImage2.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0);
-                }
-            });
+
+            pulse(binding.pulseImage1,1000,3.0f);
+            pulse(binding.pulseImage2,700,3.0f);
             handler.postDelayed(this, 1500);
         }
     };
+
+    private void pulse(ImageView pulsatingImage, long duration, float scale){
+        //duration describes how fast the circle expand, scale describes its maximum size.
+        pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(new Runnable() {
+            @Override
+            public void run() {
+                pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0);
+            }
+        });
+    }
 }

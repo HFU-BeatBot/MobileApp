@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).hide();
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
     }
 
     @Override

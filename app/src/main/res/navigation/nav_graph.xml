@@ -27,6 +27,6 @@
             android:id="@+id/fileScreenToMainScreen"
             app:destination="@id/MainScreen"
             app:enterAnim="@anim/slide_in_left_custom"
-            app:exitAnim="@android:anim/slide_out_right" />
+            app:exitAnim="@anim/slide_out_right_custom" />
     </fragment>
 </navigation>

@@ -1,21 +1,26 @@
 package com.theriotjoker.beatbot;
 
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 
 public class Genre implements Serializable {
-   // private GradientDrawable drawable;
-    private final String genreName;
-    private final int textColor;
-    private final int topColor;
 
-    private final int bottomColor;
+    @SerializedName("genre")
+    @Expose
+    private String genre;
+    @SerializedName("confidences")
+    @Expose
+    private Confidences confidences;
+    private int textColor;
+    private int topColor;
+    private int bottomColor;
     private int middleColor;
-    public Genre(String genre) {
+    public void initializeThemeValues() {
         middleColor=0x00000000;
-        this.genreName = genre.toUpperCase();
-        //final GradientDrawable.Orientation orientation = GradientDrawable.Orientation.TOP_BOTTOM;
-    /*    int firstColor;
-        int secondColor;*/
+        this.genre = genre.toUpperCase();
         switch(genre.toUpperCase()) {
             case "ROCK":
                 topColor = 0xFFFF2222;
@@ -69,21 +74,16 @@ public class Genre implements Serializable {
                 bottomColor = 0xFFFFFFFF;
                 textColor = 0xFFFFFFFF;
                 break;
-
             default:
                 throw new IllegalArgumentException("Critical Communication Error: Wrong/Unsupported Argument: "+genre);
         }
-        //drawable = new GradientDrawable(orientation, new int[]{firstColor,secondColor});
     }
-    /*public GradientDrawable getDrawable() {
-        return drawable;
-    }*/
-    public String getGenreName() {
-        return genreName;
+    public String getMainGenreName() {
+        return genre;
     }
     public int[] getColors() {
         if(middleColor != 0x000000) {
-            return new int[] {topColor,middleColor, bottomColor};
+            return new int[] {topColor,middleColor,bottomColor};
         }
         return new int[]{topColor, bottomColor};
     }
@@ -91,4 +91,8 @@ public class Genre implements Serializable {
     public int getTextColor() {
         return textColor;
     }
+    public Confidences getConfidences() {
+        return confidences;
+    }
+
 }

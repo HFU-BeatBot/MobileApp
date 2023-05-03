@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
+import java.util.Random;
 
 public class MainScreen extends Fragment {
 
@@ -44,58 +45,21 @@ public class MainScreen extends Fragment {
     private MediaRecorder mediaRecorder;
     private boolean isRecording;
     private Intent chosenFileIntent;
+    private FileUploadController fileUploadController;
     private final Handler handler = new Handler();
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        fileUploadController = new FileUploadController(this);
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     chosenFileIntent = result.getData();
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
-                        alertDialogBuilder.setMessage("You have chosen the following file: "+getFileNameFromUri(data.getData())+". Do you want to upload it?")
-                                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        //TODO remove debug
-                                        MediaPlayer mp = new MediaPlayer();
-                                        try {
-                                            if(result.getData() != null) {
-                                                mp.setDataSource(requireContext(), result.getData().getData());
-                                            } else {
-                                                //TODO show exception
-                                            }
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                        Bundle bundle = new Bundle();
-                                        String[] genres = {"BLUES", "CLASSICAL", "ROCK", "POP", "DISCO", "METAL", "HIPHOP", "JAZZ", "COUNTRY", "REGGAE"};
-                                        Genre genre = new Genre(genres[(new java.util.Random().nextInt(genres.length))]);
-                                        bundle.putSerializable("GENRE", genre);
-                                        ResultScreen resultScreen = new ResultScreen();
-                                        resultScreen.setArguments(bundle);
-                                        NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen, bundle);
-                                        /*mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                                            @Override
-                                            public void onPrepared(MediaPlayer mediaPlayer) {
-                                                mp.start();
-                                            }
-                                        });
-                                        mp.prepareAsync();*/
-                                    }
-                                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        dialogInterface.dismiss();
-                                    }
-                                });
-                        AlertDialog messageDialog = alertDialogBuilder.create();
-                        Button btn = messageDialog.getButton( DialogInterface.BUTTON_NEGATIVE);
-                        //messageDialog.getWindow().getAttributes().windowAnimations = R.style.AlertDialogAnimation;
-                        messageDialog.show();
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        buildDialogForFile(result.getData());
+                    } else {
+                        Toast.makeText(getContext(),"File not supported...", Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -105,27 +69,20 @@ public class MainScreen extends Fragment {
         isRecording = false;
         return binding.getRoot();
     }
+    private void buildDialogForFile(Intent result) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+        alertDialogBuilder.setMessage("You have chosen the following file: "+fileUploadController.getFileNameFromUri(result.getData())+". Do you want to upload it?")
+                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        fileUploadController.getMusicGenreFromUri(result.getData());
 
-    private String getFileNameFromUri(Uri uri) {
-        String returnValue = null;
-        Cursor cursor = null;
-        try {
-            String[] projectionofTable = {MediaStore.Images.Media.DISPLAY_NAME};
-            cursor = requireActivity().getContentResolver().query(uri, projectionofTable, null, null);
-            if(cursor != null && cursor.moveToFirst()) {
-                int columnIndexOfName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
-                returnValue = cursor.getString(columnIndexOfName);
-            }
-        } catch(Exception e) {
-            Toast t = Toast.makeText(getContext(), "File is corrupted...", Toast.LENGTH_SHORT);
-            t.show();
-        } finally {
-            if(cursor != null) {
-                cursor.close();
-            }
-        }
-        return returnValue;
+                    }
+                }).setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
+        AlertDialog messageDialog = alertDialogBuilder.create();
+        messageDialog.show();
     }
+
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         binding.testButton.setVisibility(View.INVISIBLE);
@@ -140,7 +97,7 @@ public class MainScreen extends Fragment {
         //NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen)
         binding.useFileButton.setOnClickListener(view1 -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT); //Create an intent to get a file from the filesystem
-            intent.setType("audio/mpeg"); //the file should be of the type .mp3 (actual name mpeg)
+            intent.setType("audio/*"); //the file type should be wave
             startActivityIntent.launch(intent);
 
         });

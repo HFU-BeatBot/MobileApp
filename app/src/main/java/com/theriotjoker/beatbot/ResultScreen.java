@@ -36,7 +36,7 @@ public class ResultScreen extends Fragment {
         Genre genre = (Genre) getArguments().getSerializable("GENRE");
         TextView genreTextView = view.findViewById(R.id.genre);
         TextView titleTextView = view.findViewById(R.id.titleText);
-        genreTextView.setText(genre.getGenreName());
+        genreTextView.setText(genre.getMainGenreName());
         genreTextView.setTextColor(genre.getTextColor());
         titleTextView.setTextColor(genre.getTextColor());
         ConstraintLayout layout = view.findViewById(R.id.resultPageLayout);

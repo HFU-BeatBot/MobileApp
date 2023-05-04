@@ -36,53 +36,61 @@ public class Confidences {
     @Expose
     private Double rock;
 
-    public void setBlues(Double blues) {
-        this.blues = blues;
+    public Confidences(double[] confidences) {
+        this.blues = confidences[0];
+        this.classical = confidences[1];
+        this.country = confidences[2];
+        this.disco = confidences[3];
+        this.hipHop = confidences[4];
+        this.jazz = confidences[5];
+        this.metal = confidences[6];
+        this.pop = confidences[7];
+        this.reggae = confidences[8];
+        this.rock = confidences[9];
+    }
+    public double[] getConfidenceValues() {
+        return new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock};
+    }
+    public String getStringNameOfGenre(int i) {
+        switch(i) {
+            case 0:
+                return "Blues".toUpperCase();
+            case 1:
+                return "Classical".toUpperCase();
+            case 2:
+                return "Country".toUpperCase();
+            case 3:
+                return "Disco".toUpperCase();
+            case 4:
+                return "HipHop".toUpperCase();
+            case 5:
+                return "Jazz".toUpperCase();
+            case 6:
+                return "Metal".toUpperCase();
+            case 7:
+                return "Pop".toUpperCase();
+            case 8:
+                return "Reggae".toUpperCase();
+            case 9:
+                return "Rock".toUpperCase();
+            default:
+                throw new IllegalArgumentException("Invalid genre index: " + i);
+        }
     }
 
-
-    public void setClassical(Double classical) {
-        this.classical = classical;
+    @Override
+    public String toString() {
+        return "Confidences{" +
+                "blues=" + blues +
+                ", classical=" + classical +
+                ", country=" + country +
+                ", disco=" + disco +
+                ", hipHop=" + hipHop +
+                ", jazz=" + jazz +
+                ", metal=" + metal +
+                ", pop=" + pop +
+                ", reggae=" + reggae +
+                ", rock=" + rock +
+                '}';
     }
-
-
-    public void setCountry(Double country) {
-        this.country = country;
-    }
-
-
-    public void setDisco(Double disco) {
-        this.disco = disco;
-    }
-
-
-    public void setHipHop(Double hipHop) {
-        this.hipHop = hipHop;
-    }
-
-
-    public void setJazz(Double jazz) {
-        this.jazz = jazz;
-    }
-
-
-    public void setMetal(Double metal) {
-        this.metal = metal;
-    }
-
-
-    public void setPop(Double pop) {
-        this.pop = pop;
-    }
-
-
-    public void setReggae(Double reggae) {
-        this.reggae = reggae;
-    }
-
-
-    public void setRock(Double rock) {
-        this.rock = rock;
-    }
-
 }

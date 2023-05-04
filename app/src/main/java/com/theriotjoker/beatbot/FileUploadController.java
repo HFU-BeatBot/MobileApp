@@ -22,15 +22,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.DoubleStream;
 
 public class FileUploadController {
-
+    private final ArrayList<Genre> genres;
+    private final static Object o = new Object();
     private static final String BEATBOT_API_URL = "http://141.28.73.92:8000/process";
     private final MainScreen mainScreen;
 
     public FileUploadController(MainScreen mainScreen) {
+        genres = new ArrayList<>();
         this.mainScreen = mainScreen;
     }
 
@@ -44,7 +51,7 @@ public class FileUploadController {
                 returnValue = cursor.getString(columnIndexOfName);
             }
         } catch(Exception e) {
-            writeErrorToScreen("The file could not be read...");
+            writeErrorToScreen("The file could not be read.");
         }
         return returnValue;
     }
@@ -72,26 +79,26 @@ public class FileUploadController {
             @Override
             public void run() {
                 File f = getFileObjectFromUri(uri);
-                AudioArithmeticController audioArithmeticController = new AudioArithmeticController();
-                String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(f);
-                String apiCallString = "{\"music_array\":"+musicValuesString+"}";
-                System.out.println(apiCallString);
-                String apiAnswerJson = null;
-                ApiHandler apiHandler = new ApiHandler();
+                AudioArithmeticController audioArithmeticController = new AudioArithmeticController(f);
+                String musicValuesString = "";
+                long audioLength;
+
                 try {
-                    apiAnswerJson = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
-                } catch (IOException e) {
-                    writeErrorToScreen("Api connection failed... Check your internet connection!");
-                    System.out.println(e.getMessage());
-                    e.printStackTrace();
+                    audioLength = audioArithmeticController.getLengthOfAudio();
+                } catch (IOException | WavFileException e) {
+                    writeErrorToScreen("The file could not be read.");
                     return;
                 }
-                Genre detectedGenres = generateGenreFromJson(apiAnswerJson);
+                Thread t = null;
+                for(int i = 0; i+3 <= 40; i = i+3) {
+                    tempName(i,3, audioArithmeticController).run();
+                }
+
                 uiHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         Bundle bundle = new Bundle();
-                        bundle.putSerializable("GENRE", detectedGenres);
+                        bundle.putSerializable("GENRE", calculateAverageGenre());
                         ResultScreen resultScreen = new ResultScreen();
                         resultScreen.setArguments(bundle);
                         NavHostFragment.findNavController(mainScreen).navigate(R.id.mainScreenToFileScreen, bundle);
@@ -99,6 +106,46 @@ public class FileUploadController {
                 });
             }
         });
+    }
+    private Genre calculateAverageGenre() {
+        System.out.println(genres.size() + " GENRES SIZE GENRESS IZE");
+        double[] array = new double[10];
+        for(Genre g : genres) {
+            double[] confidenceValues = g.getConfidences().getConfidenceValues();
+            for(int i = 0; i < confidenceValues.length; i++) {
+                array[i] = array[i]+confidenceValues[i];
+            }
+        }
+        double sum = Arrays.stream(array).sum();
+        for(int i = 0; i < array.length; i++) {
+            array[i] = array[i] / sum;
+        }
+        System.out.println(Arrays.stream(array).sum());
+        Genre retVal = new Genre(new Confidences(array));
+        System.out.println(retVal.getConfidences().toString());
+        return retVal;
+    }
+    private Runnable tempName(int offset, int length, AudioArithmeticController audioArithmeticController) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset,length);
+                String apiCallString = "{\"music_array\":"+musicValuesString+"}";
+                synchronized (o) {
+                    ApiHandler apiHandler = new ApiHandler();
+                    String answer;
+                    try {
+                        answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
+                    } catch (IOException e) {
+                        writeErrorToScreen("Connection to server failed.");
+                        return;
+                    }
+                    Genre genre = generateGenreFromJson(answer);
+                    genres.add(genre);
+                    System.out.println(genres.size());
+                }
+            }
+        };
     }
     private Genre generateGenreFromJson(String json) {
         Gson gson = new Gson();
@@ -108,7 +155,6 @@ public class FileUploadController {
 
     }
     private void writeErrorToScreen(String error) {
-        System.out.println("ERROR ERROR + " +error );
         mainScreen.requireActivity().runOnUiThread(() -> {
             Toast t = Toast.makeText(mainScreen.getContext(), error, Toast.LENGTH_SHORT);
             t.show();

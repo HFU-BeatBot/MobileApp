@@ -5,9 +5,16 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class AudioArithmeticController {
+    private final File musicFile;
     private float[][] mfccValues;
-    public String getStringMusicFeaturesFromFile(File f) {
-        populateMFCCValues(f);
+    public AudioArithmeticController(File f) {
+        this.musicFile = f;
+    }
+    public long getLengthOfAudio() throws IOException, WavFileException {
+        return WavFile.openWavFile(musicFile).getDuration();
+    }
+    public String getStringMusicFeaturesFromFile(int offset, int length) {
+        populateMFCCValues(offset, length);
         float[] meanMFCCs = generateMeanMFCCValues();
         double[] standardDeviations = generateStandardDeviations();
         double[] apiCallArray = createArrayForApi(meanMFCCs,standardDeviations);
@@ -20,10 +27,16 @@ public class AudioArithmeticController {
         }
         return standardDeviations;
     }
-    private void populateMFCCValues(File f) {
+    private void populateMFCCValues(int offset, int length) {
         JLibrosa librosa = new JLibrosa();
         try {
-            float[] audioValues = librosa.loadAndRead(f.getPath(), -1,-1);
+            WavFile wavFile = WavFile.openWavFile(musicFile);
+            System.out.println(wavFile.getDuration());
+        } catch (IOException | WavFileException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            float[] audioValues = librosa.loadAndReadWithOffset(musicFile.getPath(), -1,length, offset);
             mfccValues = librosa.generateMFCCFeatures(audioValues,librosa.getSampleRate(),20);
         } catch (FileFormatNotSupportedException | WavFileException | IOException e) {
             throw new RuntimeException(e);

@@ -18,6 +18,11 @@ public class Genre implements Serializable {
     private int topColor;
     private int bottomColor;
     private int middleColor;
+    public Genre(Confidences confidences) {
+        this.confidences = confidences;
+        genre = confidences.getStringNameOfGenre(getIndexOfMaxGenreConfidence());
+        initializeThemeValues();
+    }
     public void initializeThemeValues() {
         middleColor=0x00000000;
         this.genre = genre.toUpperCase();
@@ -75,7 +80,7 @@ public class Genre implements Serializable {
                 textColor = 0xFFFFFFFF;
                 break;
             default:
-                throw new IllegalArgumentException("Critical Communication Error: Wrong/Unsupported Argument: "+genre);
+                throw new IllegalArgumentException("Unsupported Argument: "+genre);
         }
     }
     public String getMainGenreName() {
@@ -87,7 +92,16 @@ public class Genre implements Serializable {
         }
         return new int[]{topColor, bottomColor};
     }
-
+    private int getIndexOfMaxGenreConfidence() {
+        double[] conf = confidences.getConfidenceValues();
+        int max = 0;
+        for (int i = 1; i < conf.length; i++) {
+            if(conf[max] < conf[i]) {
+                max = i;
+            }
+        }
+        return max;
+    }
     public int getTextColor() {
         return textColor;
     }

@@ -3,7 +3,9 @@ package com.theriotjoker.beatbot;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Confidences {
+import java.io.Serializable;
+
+public class Confidences implements Serializable {
 
     @SerializedName("Blues")
     @Expose

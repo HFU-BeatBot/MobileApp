@@ -125,7 +125,7 @@ public class JLibrosa {
 		if(!path.endsWith(".wav")) {
 			throw new FileFormatNotSupportedException("File format not supported. jLibrosa currently supports audio processing of only .wav files");
 		}
-		
+
 		File sourceFile = new File(path);
 		WavFile wavFile = null;
 
@@ -137,22 +137,22 @@ public class JLibrosa {
 		int totalNoOfFrames = mNumFrames;
 		int frameOffset = offsetDuration * mSampleRate;
 		int tobeReadFrames = readDurationInSeconds * mSampleRate;
-		
+
 		if(tobeReadFrames > (totalNoOfFrames - frameOffset)) {
 			tobeReadFrames = totalNoOfFrames - frameOffset;
 		}
-		
+
 		if (readDurationInSeconds != -1) {
 			mNumFrames = tobeReadFrames;
 			wavFile.setNumFrames(mNumFrames);
 		}
 
-		
+
 		this.setNoOfChannels(mChannels);
 		this.setNoOfFrames(mNumFrames);
 		this.setSampleRate(mSampleRate);
-		
-		
+
+
 		if (sampleRate != -1) {
 			mSampleRate = sampleRate;
 		}
@@ -162,14 +162,17 @@ public class JLibrosa {
 		float[][] buffer = new float[mChannels][mNumFrames];
 		long readFrameCount = 0;
 		//for (int i = 0; i < loopCounter; i++) {
+
 		readFrameCount = wavFile.readFrames(buffer, mNumFrames, frameOffset);
+
 		//}
 		duration = wavFile.getDuration();
 
 		if(wavFile != null) {
 			wavFile.close();
 		}
-		
+
+
 		return buffer;
 
 	}
@@ -250,7 +253,7 @@ public class JLibrosa {
 			DoubleStream ds = IntStream.range(0, floatArrValues.length)
                     .mapToDouble(k -> floatArrValues[k]);
 			
-	        double avg = DoubleStream.of(ds.toArray()).average().getAsDouble();
+	        double avg = ds.average().getAsDouble();
 	        float floatVal = (float)avg;
 	        meanMFCCValues[i] = floatVal;
 	    }   
@@ -415,29 +418,23 @@ public class JLibrosa {
 	public float[] loadAndReadWithOffset(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds, offsetDuration);
-
-		DecimalFormat df = new DecimalFormat("#.#########");
+		DecimalFormat df = new DecimalFormat("#.#####");
 		df.setRoundingMode(RoundingMode.CEILING);
 
 		int mNumFrames = this.getNoOfFrames();
 		int mChannels = this.getNoOfChannels();
-		
+
 		// take the mean of amplitude values across all the channels and convert the
 		// signal to mono mode
-		
+
 		float[] meanBuffer = new float[mNumFrames];
-				
-		
 		for (int q = 0; q < mNumFrames; q++) {
 			double frameVal = 0;
 			for (int p = 0; p < mChannels; p++) {
 				frameVal = frameVal + magValueArray[p][q];
 			}
-			try {
-				meanBuffer[q] = df.parse(df.format(frameVal / mChannels)).floatValue();
-			}catch(ParseException e) {}
+			meanBuffer[q] = (float)frameVal / mChannels;
 		}
-
 		return meanBuffer;
 		
 	}

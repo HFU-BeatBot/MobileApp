@@ -7,8 +7,14 @@ import java.util.Arrays;
 public class AudioArithmeticController {
     private final File musicFile;
     private float[][] mfccValues;
-    public AudioArithmeticController(File f) {
+    private float[] magValues;
+    private final int sampleRate;
+    private final JLibrosa librosa;
+    public AudioArithmeticController(File f) throws FileFormatNotSupportedException, IOException, WavFileException {
         this.musicFile = f;
+        librosa = new JLibrosa();
+        sampleRate = librosa.getSampleRate();
+        magValues = librosa.loadAndRead(f.getPath(),-1,-1);
     }
     public long getLengthOfAudio() throws IOException, WavFileException {
         return WavFile.openWavFile(musicFile).getDuration();
@@ -28,19 +34,8 @@ public class AudioArithmeticController {
         return standardDeviations;
     }
     private void populateMFCCValues(int offset, int length) {
-        JLibrosa librosa = new JLibrosa();
-        try {
-            WavFile wavFile = WavFile.openWavFile(musicFile);
-            System.out.println(wavFile.getDuration());
-        } catch (IOException | WavFileException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            float[] audioValues = librosa.loadAndReadWithOffset(musicFile.getPath(), -1,length, offset);
-            mfccValues = librosa.generateMFCCFeatures(audioValues,librosa.getSampleRate(),20);
-        } catch (FileFormatNotSupportedException | WavFileException | IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        mfccValues = librosa.generateMFCCFeatures(Arrays.copyOfRange(magValues, offset * librosa.getSampleRate(), (offset + length) * librosa.getSampleRate()),librosa.getSampleRate(),20);
     }
     private long getLengthOfAudioFile(File f) throws IOException, WavFileException {
         WavFile wavFile = WavFile.openWavFile(f);

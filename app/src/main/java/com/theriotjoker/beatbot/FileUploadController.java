@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.Timer;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.DoubleStream;
 
 public class FileUploadController {
     private final ArrayList<Genre> genres;
-    private final static Object o = new Object();
     private static final String BEATBOT_API_URL = "http://141.28.73.92:8000/process";
     private final MainScreen mainScreen;
 
@@ -79,20 +79,33 @@ public class FileUploadController {
             @Override
             public void run() {
                 File f = getFileObjectFromUri(uri);
-                AudioArithmeticController audioArithmeticController = new AudioArithmeticController(f);
+                if(f == null) return;
+                AudioArithmeticController audioArithmeticController;
+                try {
+                    audioArithmeticController = new AudioArithmeticController(f);
+                } catch (FileFormatNotSupportedException | IOException | WavFileException e) {
+                    throw new RuntimeException(e);
+                }
                 String musicValuesString = "";
                 long audioLength;
-
                 try {
                     audioLength = audioArithmeticController.getLengthOfAudio();
                 } catch (IOException | WavFileException e) {
                     writeErrorToScreen("The file could not be read.");
                     return;
                 }
-                Thread t = null;
-                for(int i = 0; i+3 <= 40; i = i+3) {
-                    tempName(i,3, audioArithmeticController).run();
+                long time = System.currentTimeMillis();
+                int length = 3;
+                for(int i = 0; i+length <= audioLength; i = i+length) {
+                    Thread t = new Thread(tempName(i,length, audioArithmeticController));
+                    t.start();
+                    try {
+                        t.join();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
+                System.out.println("Total time needed for everything: "+(System.currentTimeMillis()-time)/1000+" seconds.");
 
                 uiHandler.post(new Runnable() {
                     @Override
@@ -120,7 +133,7 @@ public class FileUploadController {
         for(int i = 0; i < array.length; i++) {
             array[i] = array[i] / sum;
         }
-        System.out.println(Arrays.stream(array).sum());
+        System.out.println("AVG TIME OF API CALL" +TimerUtil.getAverageTime());
         Genre retVal = new Genre(new Confidences(array));
         System.out.println(retVal.getConfidences().toString());
         return retVal;
@@ -131,19 +144,20 @@ public class FileUploadController {
             public void run() {
                 String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset,length);
                 String apiCallString = "{\"music_array\":"+musicValuesString+"}";
-                synchronized (o) {
-                    ApiHandler apiHandler = new ApiHandler();
-                    String answer;
-                    try {
-                        answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
-                    } catch (IOException e) {
-                        writeErrorToScreen("Connection to server failed.");
-                        return;
-                    }
-                    Genre genre = generateGenreFromJson(answer);
-                    genres.add(genre);
-                    System.out.println(genres.size());
+
+                TimerUtil.setStartTime(System.currentTimeMillis());
+                ApiHandler apiHandler = new ApiHandler();
+                String answer;
+                try {
+                    answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
+                } catch (IOException e) {
+                    writeErrorToScreen("Connection to server failed.");
+                    return;
                 }
+                TimerUtil.setEndTime(System.currentTimeMillis());
+                Genre genre = generateGenreFromJson(answer);
+                genres.add(genre);
+                System.out.println(Thread.currentThread() + " just finished...");
             }
         };
     }

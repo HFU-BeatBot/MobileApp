@@ -125,7 +125,7 @@ public class WavFile {
 
         // Check that the file size matches the number of bytes listed in header
         if (file.length() != chunkSize + 8) {
-            throw new WavFileException("Header chunk size (" + chunkSize + ") does not match file size (" + file.length() + ")");
+           // throw new WavFileException("Header chunk size (" + chunkSize + ") does not match file size (" + file.length() + ")");
         }
 
         wavFile.fileSize = chunkSize;

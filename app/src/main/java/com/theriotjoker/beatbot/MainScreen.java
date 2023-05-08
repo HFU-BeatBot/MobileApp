@@ -26,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
@@ -38,6 +39,9 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Random;
 
+import javazoom.jl.converter.Converter;
+import javazoom.jl.decoder.JavaLayerException;
+
 public class MainScreen extends Fragment {
 
     private FragmentFirstBinding binding;
@@ -46,6 +50,7 @@ public class MainScreen extends Fragment {
     private boolean isRecording;
     private Intent chosenFileIntent;
     private FileUploadController fileUploadController;
+    private MediaPlayer mediaPlayer;
     private final Handler handler = new Handler();
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -66,6 +71,7 @@ public class MainScreen extends Fragment {
         if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 30000);
         }
+
         isRecording = false;
         return binding.getRoot();
     }
@@ -103,18 +109,16 @@ public class MainScreen extends Fragment {
         });
 
         binding.bbButton.setOnClickListener(view2 -> {
-            File f = new File(requireActivity().getCacheDir(), "temp.mp4");
+            File f = new File(requireContext().getCacheDir(), "temp.mp3");
             if(isRecording) {
-
                 mediaRecorder.stop();
                 mediaRecorder.reset();
                 mediaRecorder.release();
-                System.out.println("DOES THE RECORDED FILE EXIST? "+f.exists()+ " info = ");
                 stopPulsing();
+                fileUploadController.getMusicGenreFromUri(Uri.fromFile(f));
                 if(animationDrawable != null) {
                     animationDrawable.stop();
                 }
-                binding.useFileButton.setEnabled(true);
             } else {
                 binding.useFileButton.setEnabled(false);
                 if(animationDrawable != null) {

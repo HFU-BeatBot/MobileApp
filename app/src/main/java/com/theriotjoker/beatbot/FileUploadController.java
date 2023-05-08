@@ -1,35 +1,29 @@
 package com.theriotjoker.beatbot;
 
-import android.app.Activity;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.widget.Toast;
 
-import androidx.fragment.app.FragmentActivity;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.gson.Gson;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.Timer;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.DoubleStream;
+
+import javazoom.jl.converter.Converter;
+import javazoom.jl.decoder.JavaLayerException;
 
 public class FileUploadController {
     private final ArrayList<Genre> genres;
@@ -55,7 +49,24 @@ public class FileUploadController {
         }
         return returnValue;
     }
-    private File getFileObjectFromUri(Uri uri) {
+    public File getFileObjectFromUri(Uri uri, String helloWorld) {
+        File selectedFile = new File(mainScreen.requireContext().getCacheDir(), helloWorld);
+        try (InputStream inputStream = mainScreen.requireActivity().getContentResolver().openInputStream(uri);
+             OutputStream outputStream = Files.newOutputStream(selectedFile.toPath())) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer,0,length);
+            }
+            outputStream.flush();
+        } catch (IOException e) {
+            writeErrorToScreen("The file could not be read...");
+            return null;
+        }
+        selectedFile.deleteOnExit();
+        return selectedFile;
+    }
+    public File getFileObjectFromUri(Uri uri) {
         File selectedFile = new File(mainScreen.requireContext().getCacheDir(), getFileNameFromUri(uri));
         try (InputStream inputStream = mainScreen.requireActivity().getContentResolver().openInputStream(uri);
              OutputStream outputStream = Files.newOutputStream(selectedFile.toPath())) {
@@ -79,12 +90,16 @@ public class FileUploadController {
             @Override
             public void run() {
                 File f = getFileObjectFromUri(uri);
+                String filename = getFileNameFromUri(uri);
                 if(f == null) return;
+                if(getFileNameFromUri(uri).endsWith(".mp3")) {
+                    f = convert(f.getPath());
+                }
                 AudioArithmeticController audioArithmeticController;
                 try {
                     audioArithmeticController = new AudioArithmeticController(f);
                 } catch (FileFormatNotSupportedException | IOException | WavFileException e) {
-                    throw new RuntimeException(e);
+                      throw new RuntimeException(e);
                 }
                 String musicValuesString = "";
                 long audioLength;
@@ -142,10 +157,11 @@ public class FileUploadController {
         return new Runnable() {
             @Override
             public void run() {
+                TimerUtil.setStartTime(System.currentTimeMillis());
                 String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset,length);
                 String apiCallString = "{\"music_array\":"+musicValuesString+"}";
+                TimerUtil.setEndTime(System.currentTimeMillis());
 
-                TimerUtil.setStartTime(System.currentTimeMillis());
                 ApiHandler apiHandler = new ApiHandler();
                 String answer;
                 try {
@@ -154,12 +170,25 @@ public class FileUploadController {
                     writeErrorToScreen("Connection to server failed.");
                     return;
                 }
-                TimerUtil.setEndTime(System.currentTimeMillis());
                 Genre genre = generateGenreFromJson(answer);
                 genres.add(genre);
                 System.out.println(Thread.currentThread() + " just finished...");
             }
         };
+    }
+    public File convert(String filePath) {
+        // TODO Auto-generated method stub
+        Converter c = new Converter();
+        try {
+            String pathToSave = filePath.replace(".mp3", "");
+            pathToSave = pathToSave + "-Converted.wav";
+            c.convert(filePath, pathToSave);
+            return new File(pathToSave);
+        } catch (JavaLayerException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
     private Genre generateGenreFromJson(String json) {
         Gson gson = new Gson();

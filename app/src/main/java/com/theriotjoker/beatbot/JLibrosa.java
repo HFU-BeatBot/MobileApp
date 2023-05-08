@@ -2,10 +2,6 @@ package com.theriotjoker.beatbot;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -28,9 +24,9 @@ public class JLibrosa {
 
 	private double fMax = 44100 / 2.0;
 	private double fMin = 0.0;
-	private int n_fft = 2048;
-	private int hop_length = 512;
-	private int n_mels = 128;
+	private final int n_fft = 2048;
+	private final int hop_length = 512;
+	private final int n_mels = 128;
 	private long duration = 7;
 	
 	
@@ -107,16 +103,14 @@ public class JLibrosa {
 
 	public float[][] loadAndReadAcrossChannelsWithOffset(String path, int sr, int readDurationInSec, int offsetDuration)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
-		float[][] magValues = readMagnitudeValuesFromFile(path, sr, readDurationInSec, offsetDuration);
-		return magValues;
+		return readMagnitudeValuesFromFile(path, sr, readDurationInSec, offsetDuration);
 	}
 	
 
 
 	public float[][] loadAndReadAcrossChannels(String path, int sr, int readDurationInSec)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
-		float[][] magValues = loadAndReadAcrossChannelsWithOffset(path, sr, readDurationInSec, 0);
-		return magValues;
+		return loadAndReadAcrossChannelsWithOffset(path, sr, readDurationInSec, 0);
 	}
 
 	private float[][] readMagnitudeValuesFromFile(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
@@ -168,9 +162,7 @@ public class JLibrosa {
 		//}
 		duration = wavFile.getDuration();
 
-		if(wavFile != null) {
-			wavFile.close();
-		}
+		wavFile.close();
 
 
 		return buffer;
@@ -225,10 +217,8 @@ public class JLibrosa {
 	 */
 	public float[][] generateMFCCFeatures(float[] magValues, int mSampleRate, int nMFCC) {
 
-		
-		float[][] mfccValues = this.generateMFCCFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
-				
-		return mfccValues;
+
+		return this.generateMFCCFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
 		
 	}
 
@@ -280,8 +270,7 @@ public class JLibrosa {
 	public double[][] generateMelSpectroGram(float[] yValues){
 		
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
-		double [][] melSpectrogram = mfccConvert.melSpectrogram(yValues);
-		return melSpectrogram;
+		return mfccConvert.melSpectrogram(yValues);
 	}
 
 	public float[][] generateMelSpectroGram(float[] yValues, int mSampleRate, int n_fft, int n_mels, int hop_length){
@@ -290,8 +279,7 @@ public class JLibrosa {
 		mfccConvert.setN_fft(n_fft);
 		mfccConvert.setN_mels(n_mels);
 		mfccConvert.setHop_length(hop_length);
-		float [][] melSVal = mfccConvert.melSpectrogramWithComplexValueProcessing(yValues);
-		return melSVal;
+		return mfccConvert.melSpectrogramWithComplexValueProcessing(yValues);
 	}
 	
 	
@@ -305,8 +293,7 @@ public class JLibrosa {
 	 * @return
 	 */
 	public Complex [][] generateSTFTFeatures(float[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
-		Complex [][] stftValues = this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, true);
-		return stftValues;
+		return this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, true);
 	}
 
 	
@@ -331,8 +318,7 @@ public class JLibrosa {
 		
 		featureExtractor.setSampleRate(mSampleRate);
 		featureExtractor.setN_mfcc(nMFCC);
-		Complex [][] stftValues = featureExtractor.extractSTFTFeaturesAsComplexValues(magValues, paddingFlag);
-		return stftValues;
+		return featureExtractor.extractSTFTFeaturesAsComplexValues(magValues, paddingFlag);
 	}
 	
 	
@@ -340,15 +326,13 @@ public class JLibrosa {
 	
 
 	public float [] generateInvSTFTFeatures(Complex [][] stftValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
-		float [] magValues = this.generateInvSTFTFeaturesWithPadOption(stftValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, -1, false);
-		return magValues;
+		return this.generateInvSTFTFeaturesWithPadOption(stftValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, -1, false);
 	}
 	
 	
 
 	public float [] generateInvSTFTFeatures(Complex [][] stftValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length, int length) {
-		float [] magValues = this.generateInvSTFTFeaturesWithPadOption(stftValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, length, false);
-		return magValues;
+		return this.generateInvSTFTFeaturesWithPadOption(stftValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, length, false);
 	}
 
 	public float [] generateInvSTFTFeaturesWithPadOption(Complex [][] stftValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length, int length, boolean paddingFlag) {
@@ -364,24 +348,21 @@ public class JLibrosa {
 		
 		featureExtractor.setSampleRate(mSampleRate);
 		featureExtractor.setN_mfcc(nMFCC);
-		float [] magValues = featureExtractor.extractInvSTFTFeaturesAsFloatValues(stftValues, paddingFlag);
-		return magValues;
+		return featureExtractor.extractInvSTFTFeaturesAsFloatValues(stftValues, paddingFlag);
 	}
 	
 	
 
 	public float [] generateInvSTFTFeatures(Complex [][] stftValues, int mSampleRate, int nMFCC) {
-		
-		float [] magValues = this.generateInvSTFTFeatures(stftValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
-		return magValues;
+
+		return this.generateInvSTFTFeatures(stftValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
 	}
 	
 	
 
 	public Complex [][] generateSTFTFeatures(float[] magValues, int mSampleRate, int nMFCC) {
-		
-		Complex [][] stftValues = this.generateSTFTFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
-		return stftValues;
+
+		return this.generateSTFTFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
 	}
 	
 	
@@ -394,9 +375,8 @@ public class JLibrosa {
 	 * @return
 	 */
 	public Complex [][] generateSTFTFeaturesWithPadOption(float[] magValues, int mSampleRate, int nMFCC, boolean padFlag) {
-		
-		Complex [][] stftValues = this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length, padFlag);
-		return stftValues;
+
+		return this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length, padFlag);
 	}
 	
 	/**
@@ -418,8 +398,6 @@ public class JLibrosa {
 	public float[] loadAndReadWithOffset(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds, offsetDuration);
-		DecimalFormat df = new DecimalFormat("#.#####");
-		df.setRoundingMode(RoundingMode.CEILING);
 
 		int mNumFrames = this.getNoOfFrames();
 		int mChannels = this.getNoOfChannels();
@@ -457,8 +435,7 @@ public class JLibrosa {
 	public float[] loadAndRead(String path, int sampleRate, int readDurationInSeconds)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
-		float[] meanBuffer = loadAndReadWithOffset(path, sampleRate, readDurationInSeconds, 0);
-		return meanBuffer;
+		return loadAndReadWithOffset(path, sampleRate, readDurationInSeconds, 0);
 		
 	}
 
@@ -510,76 +487,9 @@ public class JLibrosa {
 	public float[][] loadAndReadStereo(String path, int sampleRate, int readDurationInSeconds)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
-		float[][] stereoAudioArray = loadAndReadStereoWithOffset(path, sampleRate, readDurationInSeconds, 0);
-		return stereoAudioArray;
+		return loadAndReadStereoWithOffset(path, sampleRate, readDurationInSeconds, 0);
 
 		
 	}
-	
-	
-	/**
-	 * This function loads the audio file, reads its Numeric Magnitude Feature
-	 * values and then takes the mean of amplitude values across all the channels and
-	 * convert the signal to mono mode
-	 * 
-	 * @param path
-	 * @param sampleRate
-	 * @param readDurationInSeconds
-	 * @return
-	 * @throws IOException
-	 * @throws WavFileException
-	 * @throws FileFormatNotSupportedException 
-	 */
-	public ArrayList<Float> loadAndReadAsListWithOffset(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
-			throws IOException, WavFileException, FileFormatNotSupportedException {
 
-		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds, offsetDuration);
-
-		DecimalFormat df = new DecimalFormat("#.#########");
-		df.setRoundingMode(RoundingMode.UNNECESSARY);
-
-		int mNumFrames = this.getNoOfFrames();
-		int mChannels = this.getNoOfChannels();
-		
-		// take the mean of amplitude values across all the channels and convert the
-		// signal to mono mode
-		float[] meanBuffer = new float[mNumFrames];
-		ArrayList<Float> meanBufferList = new ArrayList<Float>();
-		for (int q = 0; q < mNumFrames; q++) {
-			double frameVal = 0;
-			for (int p = 0; p < mChannels; p++) {
-				frameVal = frameVal + magValueArray[p][q];
-			}
-			meanBufferList.add(Float.parseFloat(df.format(frameVal / mChannels)));
-		}
-		
-		return meanBufferList;
-
-	}
-	
-	
-	
-	
-	/**
-	 * This function loads the audio file, reads its Numeric Magnitude Feature
-	 * values and then takes the mean of amplitude values across all the channels and
-	 * convert the signal to mono mode
-	 * 
-	 * @param path
-	 * @param sampleRate
-	 * @param readDurationInSeconds
-	 * @return
-	 * @throws IOException
-	 * @throws WavFileException
-	 * @throws FileFormatNotSupportedException 
-	 */
-	public ArrayList<Float> loadAndReadAsList(String path, int sampleRate, int readDurationInSeconds)
-			throws IOException, WavFileException, FileFormatNotSupportedException {
-
-		ArrayList<Float> meanBufferList = loadAndReadAsListWithOffset(path, sampleRate, readDurationInSeconds, 0);
-		return meanBufferList;
-
-	}
-	
-	
 }

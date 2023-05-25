@@ -4,9 +4,11 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class Confidences implements Serializable {
-
+    double[] confidenceArray;
     @SerializedName("Blues")
     @Expose
     private Double blues;
@@ -49,9 +51,17 @@ public class Confidences implements Serializable {
         this.pop = confidences[7];
         this.reggae = confidences[8];
         this.rock = confidences[9];
+        confidenceArray = new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock};
     }
     public double[] getConfidenceValues() {
         return new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock};
+    }
+    public HashMap<Double, String> getConfidenceHashMap() {
+        HashMap<Double, String> retVal = new HashMap<>();
+        for(int i = 0; i < confidenceArray.length; i++) {
+            retVal.put(confidenceArray[i], getStringNameOfGenre(i));
+        }
+        return retVal;
     }
     public String getStringNameOfGenre(int i) {
         switch(i) {

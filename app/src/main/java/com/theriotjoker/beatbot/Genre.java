@@ -5,6 +5,9 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 public class Genre implements Serializable {
 
@@ -18,6 +21,7 @@ public class Genre implements Serializable {
     private int topColor;
     private int bottomColor;
     private int middleColor;
+    private double[] confidenceDoubleArray;
     public Genre(Confidences confidences) {
         this.confidences = confidences;
         genre = confidences.getStringNameOfGenre(getIndexOfMaxGenreConfidence());
@@ -101,6 +105,21 @@ public class Genre implements Serializable {
             }
         }
         return max;
+    }
+    public HashMap<String, Double> getTopFiveGenres() {
+        HashMap<Double, String> confidenceHashMap = confidences.getConfidenceHashMap();
+        HashMap<String, Double> returnHashMap = new HashMap<>();
+        Double[] arr = new Double[confidenceHashMap.keySet().size()];
+        int i = 0;
+        for(Double d : confidenceHashMap.keySet()) {
+            arr[i] = d;
+            i++;
+        }
+        Arrays.sort(arr);
+        for(i = arr.length-1; i >= arr.length-5; i--) {
+            returnHashMap.put(confidenceHashMap.get(arr[i]), arr[i]);
+        }
+        return returnHashMap;
     }
     public int getTextColor() {
         return textColor;

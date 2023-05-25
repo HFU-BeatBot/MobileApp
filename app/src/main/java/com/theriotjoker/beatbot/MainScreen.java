@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -39,8 +40,6 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Random;
 
-import javazoom.jl.converter.Converter;
-import javazoom.jl.decoder.JavaLayerException;
 
 public class MainScreen extends Fragment {
 
@@ -52,11 +51,13 @@ public class MainScreen extends Fragment {
     private FileUploadController fileUploadController;
     private MediaPlayer mediaPlayer;
     private final Handler handler = new Handler();
+    private ProgressBar progressBar;
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         fileUploadController = new FileUploadController(this);
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
+        progressBar = binding.progressBar;
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -91,7 +92,6 @@ public class MainScreen extends Fragment {
 
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        binding.testButton.setVisibility(View.INVISIBLE);
         //TODO setVisibility of Debug Button
         super.onViewCreated(view, savedInstanceState);
         AnimationDrawable animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
@@ -140,27 +140,6 @@ public class MainScreen extends Fragment {
 
             isRecording = !isRecording;
         });
-        //TODO: remove debug
-        binding.testButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MediaPlayer player = new MediaPlayer();
-                try {
-                    File file = new File(requireContext().getCacheDir(), "temp.mp4");
-                    player.setDataSource(file.getAbsolutePath());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                /*player.prepareAsync();
-                player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mediaPlayer) {
-                        mediaPlayer.start();
-                    }
-                });*/
-            }
-        });
-
     }
 
     @Override
@@ -194,5 +173,23 @@ public class MainScreen extends Fragment {
         pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(() ->
                 pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0)
         );
+    }
+    public void initializeProgressBar(int length) {
+        handler.post(() -> {
+            progressBar.setVisibility(ProgressBar.VISIBLE);
+            progressBar.setMax(length);
+        });
+    }
+    public void incrementProgressBar() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.incrementProgressBy(1);
+            }
+        });
+    }
+    public void resetProgressBar() {
+        progressBar.setVisibility(ProgressBar.INVISIBLE);
+        progressBar.setProgress(0);
     }
 }

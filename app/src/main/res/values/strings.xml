@@ -13,6 +13,6 @@
     <string name="upload_a_file">Use a file</string>
     <string name="bb">BB</string>
     <string name="beatBot">BeatBot</string>
-    <string name="detected_genre">Detected Genre:</string>
+    <string name="genre_title_text">Main Genre:</string>
     <string name="this_image_acts_as_a_part_of_an_animation_and_has_no_content">This image acts as a part of an animation and has no content.</string>
 </resources>

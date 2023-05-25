@@ -59,14 +59,19 @@
         app:layout_constraintTop_toBottomOf="@+id/bb_button"
         app:layout_constraintVertical_bias="0.337" />
 
-    <android.widget.Button
-        android:id="@+id/testButton"
-        android:layout_width="wrap_content"
+    <ProgressBar
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="36dp"
-        android:layout_marginBottom="664dp"
-        android:background="@drawable/select_file_button_design"
-        android:text="Debug/Play Sound"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="124dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </ProgressBar>
 </androidx.constraintlayout.widget.ConstraintLayout>

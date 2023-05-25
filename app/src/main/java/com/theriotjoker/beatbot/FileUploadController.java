@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.navigation.fragment.NavHostFragment;
@@ -20,7 +21,11 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javazoom.jl.converter.Converter;
 import javazoom.jl.decoder.JavaLayerException;
@@ -30,9 +35,11 @@ public class FileUploadController {
     private static final String BEATBOT_API_URL = "http://141.28.73.92:8000/process";
     private final MainScreen mainScreen;
 
+    private Semaphore semaphore;
     public FileUploadController(MainScreen mainScreen) {
         genres = new ArrayList<>();
         this.mainScreen = mainScreen;
+        semaphore = new Semaphore(5);
     }
 
     public String getFileNameFromUri(Uri uri) {
@@ -110,18 +117,24 @@ public class FileUploadController {
                     return;
                 }
                 long time = System.currentTimeMillis();
-                int length = 3;
-                for(int i = 0; i+length <= audioLength; i = i+length) {
-                    Thread t = new Thread(tempName(i,length, audioArithmeticController));
-                    t.start();
-                    try {
-                        t.join();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+                final int AUDIO_SNIPPET_LENGTH = 5; //the audio gets divided into snippets of 3 seconds
+                mainScreen.initializeProgressBar((int)audioLength/AUDIO_SNIPPET_LENGTH);
+                ArrayList<Runnable> runnables = new ArrayList<>();
+                for(int i = 0; i+AUDIO_SNIPPET_LENGTH <= audioLength; i = i+AUDIO_SNIPPET_LENGTH) {
+                    runnables.add(tempName(i,AUDIO_SNIPPET_LENGTH, audioArithmeticController));
+                }
+                final int MAX_THREADS = 4;
+                ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
+                for(Runnable r : runnables) {
+                    executorService.execute(r);
+                }
+                executorService.shutdown();
+                try {
+                    executorService.awaitTermination(20, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
                 System.out.println("Total time needed for everything: "+(System.currentTimeMillis()-time)/1000+" seconds.");
-
                 uiHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -151,6 +164,7 @@ public class FileUploadController {
         System.out.println("AVG TIME OF API CALL" +TimerUtil.getAverageTime());
         Genre retVal = new Genre(new Confidences(array));
         System.out.println(retVal.getConfidences().toString());
+
         return retVal;
     }
     private Runnable tempName(int offset, int length, AudioArithmeticController audioArithmeticController) {
@@ -173,6 +187,7 @@ public class FileUploadController {
                 Genre genre = generateGenreFromJson(answer);
                 genres.add(genre);
                 System.out.println(Thread.currentThread() + " just finished...");
+                mainScreen.incrementProgressBar();
             }
         };
     }

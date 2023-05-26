@@ -51,9 +51,8 @@ public class ResultScreen extends Fragment {
         Iterator<RelativeLayout> iterator = layoutList.iterator();
         for(String s : hashMap.keySet()) {
             RelativeLayout layout = iterator.next();
-            float translationFactor = layout.getHeight()*(0.5f-1f);
-            System.out.println(layout.getHeight());
-            layout.animate().translationY(translationFactor);
+            layout.animate().scaleY(hashMap.get(s).floatValue());
+
         }
         ConstraintLayout layout = view.findViewById(R.id.resultPageLayout);
         drawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, genre.getColors());

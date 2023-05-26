@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.navigation.fragment.NavHostFragment;
@@ -24,7 +23,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javazoom.jl.converter.Converter;
@@ -117,20 +115,20 @@ public class FileUploadController {
                     return;
                 }
                 long time = System.currentTimeMillis();
-                final int AUDIO_SNIPPET_LENGTH = 5; //the audio gets divided into snippets of 3 seconds
+                final int AUDIO_SNIPPET_LENGTH =3 ; //the audio gets divided into snippets of 3 seconds
                 mainScreen.initializeProgressBar((int)audioLength/AUDIO_SNIPPET_LENGTH);
                 ArrayList<Runnable> runnables = new ArrayList<>();
                 for(int i = 0; i+AUDIO_SNIPPET_LENGTH <= audioLength; i = i+AUDIO_SNIPPET_LENGTH) {
-                    runnables.add(tempName(i,AUDIO_SNIPPET_LENGTH, audioArithmeticController));
+                    runnables.add(createMFCCTask(i,AUDIO_SNIPPET_LENGTH, audioArithmeticController));
                 }
-                final int MAX_THREADS = 4;
+                final int MAX_THREADS = 1;
                 ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
                 for(Runnable r : runnables) {
                     executorService.execute(r);
                 }
                 executorService.shutdown();
                 try {
-                    executorService.awaitTermination(20, TimeUnit.SECONDS);
+                    boolean terminatedSuccessfully = executorService.awaitTermination(60, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -167,12 +165,13 @@ public class FileUploadController {
 
         return retVal;
     }
-    private Runnable tempName(int offset, int length, AudioArithmeticController audioArithmeticController) {
+    private Runnable createMFCCTask(int offset, int length, AudioArithmeticController audioArithmeticController) {
         return new Runnable() {
             @Override
             public void run() {
                 TimerUtil.setStartTime(System.currentTimeMillis());
                 String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset,length);
+                System.out.println("QSWOIHQIOUTHQWUIOTHWQIUTHU"+musicValuesString);
                 String apiCallString = "{\"music_array\":"+musicValuesString+"}";
                 TimerUtil.setEndTime(System.currentTimeMillis());
 
@@ -185,8 +184,10 @@ public class FileUploadController {
                     return;
                 }
                 Genre genre = generateGenreFromJson(answer);
+
+                System.out.println("JSON ******* " + answer);
+                System.out.println("ACTUAL ARRAY ******* "+Arrays.toString(genre.getConfidences().getConfidenceValues()));
                 genres.add(genre);
-                System.out.println(Thread.currentThread() + " just finished...");
                 mainScreen.incrementProgressBar();
             }
         };

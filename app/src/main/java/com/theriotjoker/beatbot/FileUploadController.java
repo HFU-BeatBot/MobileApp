@@ -115,10 +115,10 @@ public class FileUploadController {
                     return;
                 }
                 long time = System.currentTimeMillis();
-                final int AUDIO_SNIPPET_LENGTH =3 ; //the audio gets divided into snippets of 3 seconds
+                final int AUDIO_SNIPPET_LENGTH = 5; //the audio gets divided into snippets of 3 seconds
                 mainScreen.initializeProgressBar((int)audioLength/AUDIO_SNIPPET_LENGTH);
                 ArrayList<Runnable> runnables = new ArrayList<>();
-                for(int i = 0; i+AUDIO_SNIPPET_LENGTH <= audioLength; i = i+AUDIO_SNIPPET_LENGTH) {
+                for(int i = 0; i+AUDIO_SNIPPET_LENGTH < audioLength; i = i+AUDIO_SNIPPET_LENGTH) {
                     runnables.add(createMFCCTask(i,AUDIO_SNIPPET_LENGTH, audioArithmeticController));
                 }
                 final int MAX_THREADS = 1;
@@ -159,9 +159,7 @@ public class FileUploadController {
         for(int i = 0; i < array.length; i++) {
             array[i] = array[i] / sum;
         }
-        System.out.println("AVG TIME OF API CALL" +TimerUtil.getAverageTime());
         Genre retVal = new Genre(new Confidences(array));
-        System.out.println(retVal.getConfidences().toString());
 
         return retVal;
     }
@@ -171,8 +169,8 @@ public class FileUploadController {
             public void run() {
                 TimerUtil.setStartTime(System.currentTimeMillis());
                 String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset,length);
-                System.out.println("QSWOIHQIOUTHQWUIOTHWQIUTHU"+musicValuesString);
                 String apiCallString = "{\"music_array\":"+musicValuesString+"}";
+                //System.out.println("Variance + MFCC"+apiCallString);
                 TimerUtil.setEndTime(System.currentTimeMillis());
 
                 ApiHandler apiHandler = new ApiHandler();
@@ -184,9 +182,6 @@ public class FileUploadController {
                     return;
                 }
                 Genre genre = generateGenreFromJson(answer);
-
-                System.out.println("JSON ******* " + answer);
-                System.out.println("ACTUAL ARRAY ******* "+Arrays.toString(genre.getConfidences().getConfidenceValues()));
                 genres.add(genre);
                 mainScreen.incrementProgressBar();
             }
@@ -220,19 +215,3 @@ public class FileUploadController {
         });
     }
 }
-/*
-* String[] fileColumn = {MediaStore.Images.Media.DATA};
-        String filePath = null;
-        try (Cursor cursor = mainScreen.requireActivity().getContentResolver().query(uri, fileColumn, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int columnIndexOfFile = cursor.getColumnIndexOrThrow(fileColumn[0]);
-                filePath = cursor.getString(columnIndexOfFile);
-                System.out.println("File Path = "+filePath);
-                return new File(filePath);
-            }
-        } catch (Exception e) {
-            Toast t = Toast.makeText(mainScreen.getContext(), "Could not load file...", Toast.LENGTH_SHORT);
-            t.show();
-        }
-        System.out.println("File Path = "+filePath);
-        return null; */

@@ -24,6 +24,7 @@ public class AudioArithmeticController {
         float[] meanMFCCs = generateMeanMFCCValues();
         double[] standardDeviations = generateStandardDeviations();
         double[] apiCallArray = createArrayForApi(meanMFCCs,standardDeviations);
+        System.out.println(Arrays.toString(apiCallArray));
         return Arrays.toString(apiCallArray);
     }
     private double[] generateStandardDeviations() {
@@ -51,8 +52,6 @@ public class AudioArithmeticController {
         for (double i : array) {
             sum += i;
         }
-        //TODO: mean is not necessary
-        // get the mean of array
         int length = array.length;
         double mean = sum / length;
         // calculate the standard deviation

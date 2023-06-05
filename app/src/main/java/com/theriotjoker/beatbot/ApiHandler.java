@@ -35,4 +35,16 @@ public class ApiHandler {
         connection.setDoOutput(true);
         return connection;
     }
+    public static boolean testConnection(String url) {
+        try {
+            URL connectionTestURl = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) connectionTestURl.openConnection();
+            connection.connect();
+            connection.disconnect();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+
+    }
 }

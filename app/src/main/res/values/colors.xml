@@ -8,8 +8,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="hfugreen">#008C58</color>
-    <color name="turqoise">#008D9A</color>
+    <color name="red">#FF0000</color>
+    <color name="green">#00FF00</color>
+    <color name="purpleish">#0083B6 </color>
     <color name="lightblue">#00C4FF</color>
     <color name="textColor">#D0FBE1</color>
-    <color name="rockTextColor">#DE9B89</color>
+    <color name="hfugreengreyedout">#548C78</color>
 </resources>

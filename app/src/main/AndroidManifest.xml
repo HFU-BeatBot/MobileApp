@@ -9,15 +9,18 @@
         android:largeHeap="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/beatbot_app_splash"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.BeatBot"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <!-- screenOrientation="portrait" creates a warning, but is unavoidable, no time to make 2 different overlays -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.BeatBot.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

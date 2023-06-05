@@ -2,23 +2,20 @@ package com.theriotjoker.beatbot;
 
 import android.os.Bundle;
 
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-
-import androidx.navigation.NavController;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
 import com.theriotjoker.beatbot.databinding.ActivityMainBinding;
 
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.Window;
+
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import java.util.Objects;
 
@@ -26,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
+    private boolean pressedBackRecently = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,33 +37,34 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
     }
-
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    public void onBackPressed() {
+        //This is a quick, but dirty way of making the back button transition back to the main screen
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment navHostFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+        Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+        if(currentFragment instanceof ResultScreen) {
+            Navigation.findNavController(navHostFragment.getView()).navigate(R.id.fileScreenToMainScreen);
+        } else {
+            MainScreen mainScreen =(MainScreen)currentFragment;
+            if(mainScreen.isRecording()) {
+                mainScreen.stopRecording();
+            } else {
+                if(!pressedBackRecently) {
+                    Toast.makeText(currentFragment.requireContext(), "Please press back again to exit the app", Toast.LENGTH_SHORT).show();
+                    pressedBackRecently = true;
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            pressedBackRecently = false;
+                        }
+                    }, 1500);
+                } else {
+                    pressedBackRecently = false;
+                    finish();
+                }
+            }
         }
 
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
     }
 }

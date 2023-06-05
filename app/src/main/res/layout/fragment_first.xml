@@ -22,6 +22,7 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:background="@drawable/circle"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
@@ -29,14 +30,13 @@
         app:layout_constraintTop_toTopOf="parent"
         android:contentDescription="@string/this_image_acts_as_a_part_of_an_animation_and_has_no_content" />
 
-    <android.widget.Button
+    <android.widget.ImageButton
         android:id="@+id/bb_button"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:background="@drawable/bb_button_design"
-        android:text="@string/bb"
         android:textColor="@color/textColor"
-        android:textSize="75sp"
+        android:src="@drawable/beatbot_button_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
@@ -60,18 +60,45 @@
         app:layout_constraintVertical_bias="0.337" />
 
     <ProgressBar
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:id="@+id/progressBar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="124dp"
         android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
         android:visibility="invisible"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintBottom_toTopOf="@+id/use_file_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bb_button">
 
     </ProgressBar>
+
+    <TextView
+        android:id="@+id/onlineStauts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/online"
+        android:textColor="@color/green"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/infoTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:textColor="@color/textColor"
+        android:background="@drawable/info_background"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/pulseImage2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="I am a text"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

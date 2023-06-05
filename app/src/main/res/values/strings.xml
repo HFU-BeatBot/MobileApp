@@ -15,4 +15,7 @@
     <string name="beatBot">BeatBot</string>
     <string name="genre_title_text">Main Genre:</string>
     <string name="this_image_acts_as_a_part_of_an_animation_and_has_no_content">This image acts as a part of an animation and has no content.</string>
+    <string name="zeroseconds">0s</string>
+    <string name="offline">Offline</string>
+    <string name="online">Online</string>
 </resources>

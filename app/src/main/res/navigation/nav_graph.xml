@@ -13,12 +13,12 @@
 
         <action
             android:id="@+id/mainScreenToFileScreen"
-            app:destination="@id/UseFileScreen"
+            app:destination="@id/ResultScreen"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left" />
     </fragment>
     <fragment
-        android:id="@+id/UseFileScreen"
+        android:id="@+id/ResultScreen"
         android:name="com.theriotjoker.beatbot.ResultScreen"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_second">

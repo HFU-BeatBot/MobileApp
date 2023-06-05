@@ -1,25 +1,26 @@
 package com.theriotjoker.beatbot;
 
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.drawable.AnimationDrawable;
-import android.media.MediaPlayer;
+import android.graphics.drawable.Drawable;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,18 +28,12 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
 
 import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-import java.util.Random;
 
 
 public class MainScreen extends Fragment {
@@ -47,32 +42,31 @@ public class MainScreen extends Fragment {
     private ActivityResultLauncher<Intent> startActivityIntent;
     private MediaRecorder mediaRecorder;
     private boolean isRecording;
-    private Intent chosenFileIntent;
     private FileUploadController fileUploadController;
-    private MediaPlayer mediaPlayer;
     private final Handler handler = new Handler();
     private ProgressBar progressBar;
+    private WaveRecorder waveRecorder;
+    private AnimationDrawable animationDrawable;
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         fileUploadController = new FileUploadController(this);
+        waveRecorder = new WaveRecorder(requireContext().getCacheDir().getPath());
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
         progressBar = binding.progressBar;
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-                    chosenFileIntent = result.getData();
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         buildDialogForFile(result.getData());
                     } else {
-                        Toast.makeText(getContext(),"File not supported...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(),"File could not be selected.", Toast.LENGTH_SHORT).show();
                     }
                 });
 
         if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 30000);
         }
-
         isRecording = false;
         return binding.getRoot();
     }
@@ -82,8 +76,9 @@ public class MainScreen extends Fragment {
                 .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        fileUploadController.getMusicGenreFromUri(result.getData());
-
+                        startBackgroundAnimation();
+                        fileUploadController.getGenreFromUri(result.getData());
+                        setButtonsEnabled(true);
                     }
                 }).setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog messageDialog = alertDialogBuilder.create();
@@ -92,16 +87,17 @@ public class MainScreen extends Fragment {
 
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        //TODO setVisibility of Debug Button
+        setButtonsEnabled(false);
+        setConnectionAvailable(false);
         super.onViewCreated(view, savedInstanceState);
-        AnimationDrawable animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
+        animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
         if(animationDrawable != null) {
             animationDrawable.setEnterFadeDuration(10);
             animationDrawable.setExitFadeDuration(1750);
             requireView().setBackground(animationDrawable);
         }
-        //NavHostFragment.findNavController(MainScreen.this).navigate(R.id.mainScreenToFileScreen)
         binding.useFileButton.setOnClickListener(view1 -> {
+            animateUseFileButton();
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT); //Create an intent to get a file from the filesystem
             intent.setType("audio/*"); //the file type should be wave
             startActivityIntent.launch(intent);
@@ -109,37 +105,36 @@ public class MainScreen extends Fragment {
         });
 
         binding.bbButton.setOnClickListener(view2 -> {
-            File f = new File(requireContext().getCacheDir(), "temp.mp3");
             if(isRecording) {
-                mediaRecorder.stop();
-                mediaRecorder.reset();
-                mediaRecorder.release();
-                stopPulsing();
-                fileUploadController.getMusicGenreFromUri(Uri.fromFile(f));
-                if(animationDrawable != null) {
-                    animationDrawable.stop();
-                }
-            } else {
-                binding.useFileButton.setEnabled(false);
-                if(animationDrawable != null) {
-                    animationDrawable.start();
-                }
-                startPulsing();
-                mediaRecorder = new MediaRecorder();
-                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                mediaRecorder.setOutputFile(f);
+                stopRecording();
+                String pathToFile = waveRecorder.filePath+"/final_record.wav";
+                fileUploadController.getGenreFromFile(new File(pathToFile));
+                //TODO DEBUG MEASURE
+                /*MediaPlayer mediaPlayer1 = new MediaPlayer();
                 try {
-                    mediaRecorder.prepare();
-                    mediaRecorder.start();
+                    mediaPlayer1.setDataSource(pathToFile);
+                    mediaPlayer1.prepare();
+                    mediaPlayer1.start();
                 } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                    throw new RuntimeException(e);
+                }*/
+            } else {
+                setUseFileButtonEnabled(false);
+                startTimerUpdate();
+                waveRecorder.startRecording();
+                startBackgroundAnimation();
+                startPulsing();
+                isRecording = true;
             }
-
-            isRecording = !isRecording;
         });
+    }
+    public void stopRecording() {
+        waveRecorder.stopRecording();
+        stopPulsing();
+        stopBackgroundAnimation();
+        binding.infoTextView.setVisibility(View.INVISIBLE);
+        binding.infoTextView.setText("0s");
+        isRecording = false;
     }
 
     @Override
@@ -147,7 +142,32 @@ public class MainScreen extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-
+    private void startTimerUpdate() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                final String timeInfo = "TIME ELAPSED: ";
+                if(isRecording) {
+                    if(binding.infoTextView.getVisibility() == View.INVISIBLE) {
+                        binding.infoTextView.setVisibility(View.VISIBLE);
+                        binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.red,null));
+                        String info = timeInfo + "0s";
+                        binding.infoTextView.setText(info);
+                    }
+                    String s = binding.infoTextView.getText().toString();
+                    s = s.substring(timeInfo.length(),s.length()-1);
+                    int secondsElapsed = Integer.parseInt(s);
+                    secondsElapsed++;
+                    if(secondsElapsed > 6) {
+                        binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
+                    }
+                    String toShow = timeInfo+secondsElapsed+"s";
+                    binding.infoTextView.setText(toShow);
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        });
+    }
     private void startPulsing() {
         animationRunnable.run();
     }
@@ -161,18 +181,21 @@ public class MainScreen extends Fragment {
         //makes the pulsing animation for the "BB" Button when recording.
         @Override
         public void run() {
-
-            pulse(binding.pulseImage1,1000,3.0f);
-            pulse(binding.pulseImage2,700,3.0f);
+            pulsate(binding.pulseImage1,1000,3.0f);
+            pulsate(binding.pulseImage2,700,3.0f);
             handler.postDelayed(this, 1500);
         }
     };
 
-    private void pulse(ImageView pulsatingImage, long duration, float scale){
+    private void pulsate(ImageView pulsatingImage, long duration, float scale){
         //duration describes how fast the circle expand, scale describes its maximum size.
         pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(() ->
                 pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0)
         );
+    }
+    private void animateUseFileButton() {
+        //ImageView useFileButtonImage = binding.useFileButtonImage;
+        //useFileButtonImage.animate().alpha(0.0f).scaleX(1.5f).scaleY(3.0f).setDuration(3000).withEndAction(() -> binding.useFileButtonImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0));
     }
     public void initializeProgressBar(int length) {
         handler.post(() -> {
@@ -191,5 +214,78 @@ public class MainScreen extends Fragment {
     public void resetProgressBar() {
         progressBar.setVisibility(ProgressBar.INVISIBLE);
         progressBar.setProgress(0);
+    }
+
+    public void setButtonsEnabled(boolean isEnabled) {
+        requireActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setBBButtonEnabled(isEnabled);
+                setUseFileButtonEnabled(isEnabled);
+            }
+        });
+    }
+    private void setBBButtonEnabled(boolean isEnabled) {
+        if(!isEnabled) {
+            binding.bbButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design_disabled));
+        } else {
+            binding.bbButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design));
+        }
+        binding.bbButton.setEnabled(isEnabled);
+    }
+    private void setUseFileButtonEnabled(boolean isEnabled) {
+        if(!isEnabled) {
+            binding.useFileButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.select_file_button_design_disabled));
+        } else {
+            binding.useFileButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.select_file_button_design));
+        }
+        binding.useFileButton.setEnabled(isEnabled);
+    }
+    private void startBackgroundAnimation() {
+        animationDrawable.start();
+    }
+    public void stopBackgroundAnimation() {
+        animationDrawable.stop();
+    }
+
+    public void setConnectionAvailable(boolean isOnline) {
+        requireActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView onlineStatusTextView = binding.onlineStauts;
+                if(isOnline) {
+                    setButtonsEnabled(true);
+                    onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
+                    onlineStatusTextView.setText(R.string.online);
+                } else {
+                    setButtonsEnabled(false);
+                    onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
+                    onlineStatusTextView.setText(R.string.offline);
+                }
+            }
+        });
+    }
+    public void setInfoText(String text) {
+        requireActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(binding.infoTextView.getVisibility() == View.INVISIBLE) {
+                    binding.infoTextView.setVisibility(View.VISIBLE);
+                }
+                binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
+                binding.infoTextView.setText(text);
+            }
+        });
+    }
+    public void removeInfoText() {
+        requireActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                binding.infoTextView.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    public boolean isRecording() {
+        return isRecording;
     }
 }

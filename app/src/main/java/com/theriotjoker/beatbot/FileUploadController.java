@@ -204,7 +204,8 @@ public class FileUploadController {
         return () -> {
             TimerUtil.setStartTime(System.currentTimeMillis());
             String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_LENGTH);
-            String apiCallString = "{\"music_array\":"+musicValuesString+"}";
+            String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
+            System.out.println(apiCallString);
             TimerUtil.setEndTime(System.currentTimeMillis());
 
             ApiHandler apiHandler = new ApiHandler();

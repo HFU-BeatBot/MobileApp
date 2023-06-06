@@ -7,13 +7,11 @@ import java.util.Arrays;
 public class AudioArithmeticController {
     private final File musicFile;
     private float[][] mfccValues;
-    private float[] magValues;
-    private final int sampleRate;
+    private final float[] magValues;
     private final JLibrosa librosa;
     public AudioArithmeticController(File f) throws FileFormatNotSupportedException, IOException, WavFileException {
         this.musicFile = f;
         librosa = new JLibrosa();
-        sampleRate = librosa.getSampleRate();
         magValues = librosa.loadAndRead(f.getPath(),-1,-1);
     }
     public long getLengthOfAudio() throws IOException, WavFileException {
@@ -37,11 +35,6 @@ public class AudioArithmeticController {
     private void populateMFCCValues(int offset, int length) {
 
         mfccValues = librosa.generateMFCCFeatures(Arrays.copyOfRange(magValues, offset * librosa.getSampleRate(), (offset + length) * librosa.getSampleRate()),librosa.getSampleRate(),20);
-    }
-    private long getLengthOfAudioFile(File f) throws IOException, WavFileException {
-        WavFile wavFile = WavFile.openWavFile(f);
-        return wavFile.getDuration();
-
     }
     private float[] generateMeanMFCCValues() {
         return new JLibrosa().generateMeanMFCCFeatures(mfccValues,mfccValues.length,mfccValues[0].length);

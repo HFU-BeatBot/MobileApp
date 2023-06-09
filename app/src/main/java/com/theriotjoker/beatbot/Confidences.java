@@ -11,34 +11,34 @@ public class Confidences implements Serializable {
     double[] confidenceArray;
     @SerializedName("Blues")
     @Expose
-    private Double blues;
+    private final Double blues;
     @SerializedName("Classical")
     @Expose
-    private Double classical;
+    private final Double classical;
     @SerializedName("Country")
     @Expose
-    private Double country;
+    private final Double country;
     @SerializedName("Disco")
     @Expose
-    private Double disco;
+    private final Double disco;
     @SerializedName("HipHop")
     @Expose
-    private Double hipHop;
+    private final Double hipHop;
     @SerializedName("Jazz")
     @Expose
-    private Double jazz;
+    private final Double jazz;
     @SerializedName("Metal")
     @Expose
-    private Double metal;
+    private final Double metal;
     @SerializedName("Pop")
     @Expose
-    private Double pop;
+    private final Double pop;
     @SerializedName("Reggae")
     @Expose
-    private Double reggae;
+    private final Double reggae;
     @SerializedName("Rock")
     @Expose
-    private Double rock;
+    private final Double rock;
 
     public Confidences(double[] confidences) {
         this.blues = confidences[0];

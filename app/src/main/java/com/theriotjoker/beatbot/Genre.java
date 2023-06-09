@@ -7,7 +7,6 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 public class Genre implements Serializable {
 
@@ -16,12 +15,11 @@ public class Genre implements Serializable {
     private String genre;
     @SerializedName("confidences")
     @Expose
-    private Confidences confidences;
+    private final Confidences confidences;
     private int textColor;
     private int topColor;
     private int bottomColor;
     private int middleColor;
-    private double[] confidenceDoubleArray;
     public Genre(Confidences confidences) {
         this.confidences = confidences;
         genre = confidences.getStringNameOfGenre(getIndexOfMaxGenreConfidence());

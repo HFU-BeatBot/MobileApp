@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -47,6 +48,10 @@ public class MainScreen extends Fragment {
     private WaveRecorder waveRecorder;
     private AnimationDrawable animationDrawable;
     private boolean recordingCooldown;
+    private ImageButton recordButton;
+    private Button useFileButton;
+    private TextView infoTextView;
+    private TextView onlineStatusTextView;
     private final Runnable animationRunnable = new Runnable() {
 
         //makes the pulsing animation for the "BB" Button when recording.
@@ -64,7 +69,11 @@ public class MainScreen extends Fragment {
         waveRecorder = new WaveRecorder(requireContext().getCacheDir().getPath());
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
+        useFileButton = binding.useFileButton;
+        recordButton = binding.bbButton;
         progressBar = binding.progressBar;
+        infoTextView = binding.infoTextView;
+        onlineStatusTextView = binding.onlineStauts;
         recordingCooldown = false;
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -108,15 +117,14 @@ public class MainScreen extends Fragment {
             animationDrawable.setExitFadeDuration(1750);
             requireView().setBackground(animationDrawable);
         }
-        binding.useFileButton.setOnClickListener(view1 -> {
-            animateUseFileButton();
+        useFileButton.setOnClickListener(view1 -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT); //Create an intent to get a file from the filesystem
             intent.setType("audio/*"); //the file type should be wave
             startActivityIntent.launch(intent);
 
         });
 
-        binding.bbButton.setOnClickListener(view2 -> {
+        recordButton.setOnClickListener(view2 -> {
             if(isRecording) {
                 stopRecording();
                 String pathToFile = waveRecorder.filePath+"/final_record.wav";
@@ -148,8 +156,8 @@ public class MainScreen extends Fragment {
         stopPulsing();
         stopBackgroundAnimation();
         setUseFileButtonEnabled(true);
-        binding.infoTextView.setVisibility(View.INVISIBLE);
-        binding.infoTextView.setText("0s");
+        infoTextView.setVisibility(View.INVISIBLE);
+        infoTextView.setText("0s");
         isRecording = false;
         recordingCooldown = true;
     }
@@ -165,21 +173,21 @@ public class MainScreen extends Fragment {
             public void run() {
                 final String timeInfo = "TIME ELAPSED: ";
                 if(isRecording) {
-                    if(binding.infoTextView.getVisibility() == View.INVISIBLE) {
-                        binding.infoTextView.setVisibility(View.VISIBLE);
-                        binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.red,null));
+                    if(infoTextView.getVisibility() == View.INVISIBLE) {
+                        infoTextView.setVisibility(View.VISIBLE);
+                        infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.red,null));
                         String info = timeInfo + "0s";
-                        binding.infoTextView.setText(info);
+                       infoTextView.setText(info);
                     }
-                    String s = binding.infoTextView.getText().toString();
+                    String s = infoTextView.getText().toString();
                     s = s.substring(timeInfo.length(),s.length()-1);
                     int secondsElapsed = Integer.parseInt(s);
                     secondsElapsed++;
                     if(secondsElapsed > 6) {
-                        binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
+                        infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
                     }
                     String toShow = timeInfo+secondsElapsed+"s";
-                    binding.infoTextView.setText(toShow);
+                    infoTextView.setText(toShow);
                     handler.postDelayed(this, 1000);
                 } else {
                     recordingCooldown=false;
@@ -205,10 +213,6 @@ public class MainScreen extends Fragment {
         pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(() ->
                 pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0)
         );
-    }
-    private void animateUseFileButton() {
-        //ImageView useFileButtonImage = binding.useFileButtonImage;
-        //useFileButtonImage.animate().alpha(0.0f).scaleX(1.5f).scaleY(3.0f).setDuration(3000).withEndAction(() -> binding.useFileButtonImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0));
     }
     public void initializeProgressBar(int length) {
         handler.post(() -> {
@@ -240,19 +244,19 @@ public class MainScreen extends Fragment {
     }
     private void setBBButtonEnabled(boolean isEnabled) {
         if(!isEnabled) {
-            binding.bbButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design_disabled));
+            recordButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design_disabled));
         } else {
-            binding.bbButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design));
+            recordButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design));
         }
-        binding.bbButton.setEnabled(isEnabled);
+        recordButton.setEnabled(isEnabled);
     }
     private void setUseFileButtonEnabled(boolean isEnabled) {
         if(!isEnabled) {
-            binding.useFileButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.select_file_button_design_disabled));
+            useFileButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.select_file_button_design_disabled));
         } else {
-            binding.useFileButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.select_file_button_design));
+            useFileButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.select_file_button_design));
         }
-        binding.useFileButton.setEnabled(isEnabled);
+        useFileButton.setEnabled(isEnabled);
     }
     private void startBackgroundAnimation() {
         animationDrawable.start();
@@ -265,13 +269,10 @@ public class MainScreen extends Fragment {
         requireActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView onlineStatusTextView = binding.onlineStauts;
                 if(isOnline) {
-                    setButtonsEnabled(true);
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.online);
                 } else {
-                    setButtonsEnabled(false);
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.offline);
                 }
@@ -280,18 +281,18 @@ public class MainScreen extends Fragment {
     }
     public void setInfoText(String text) {
         requireActivity().runOnUiThread(() -> {
-            if(binding.infoTextView.getVisibility() == View.INVISIBLE) {
-                binding.infoTextView.setVisibility(View.VISIBLE);
+            if(infoTextView.getVisibility() == View.INVISIBLE) {
+                infoTextView.setVisibility(View.VISIBLE);
             }
-            binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
-            binding.infoTextView.setText(text);
+            infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
+            infoTextView.setText(text);
         });
     }
     public void removeInfoText() {
         requireActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                binding.infoTextView.setVisibility(View.INVISIBLE);
+                infoTextView.setVisibility(View.INVISIBLE);
             }
         });
     }

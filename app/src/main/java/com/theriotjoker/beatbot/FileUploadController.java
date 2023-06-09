@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,10 +37,15 @@ public class FileUploadController {
     private static final long MAX_FILE_SIZE_MP3 = 15*1024*1024;
     private static final int AUDIO_SNIPPET_LENGTH = 5;
     private boolean connectionAvailable = false;
+    private boolean processStarted = false;
     private final MainScreen mainScreen;
+    private final ApiHandler apiHandler;
+    private ArrayList<String> apiCallStrings;
 
     public FileUploadController(MainScreen mainScreen) {
+        apiCallStrings = new ArrayList<>();
         genres = new ArrayList<>();
+        apiHandler = new ApiHandler();
         startConnectionChecker();
         this.mainScreen = mainScreen;
     }
@@ -78,6 +84,7 @@ public class FileUploadController {
     public void getGenreFromUri(Uri uri) {
         Executor executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
+            processStarted = true;
             mainScreen.setButtonsEnabled(false);
             File f = getFileObjectFromUri(uri);
             if(f == null) {
@@ -116,12 +123,15 @@ public class FileUploadController {
         });
     }
     public void getGenreFromFile(@NonNull File inputFile) {
+
         genres.clear();
         Executor executor = Executors.newSingleThreadExecutor();
         Handler uiHandler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
+            processStarted = true;
             if(!ApiHandler.testConnection(BEATBOT_API_URL)) {
                 writeErrorToScreen("Connection failed...");
+                cleanUp();
                 return;
             }
             boolean terminatedSuccessfully;
@@ -166,23 +176,59 @@ public class FileUploadController {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            final int MAX_WAIT_TIME_SECS = 20;
+            while(!apiCallStrings.isEmpty()) { //if the call strings are not empty, that means that our connection got cut off somewhere along the way, so we shall retry
+                //We will wait for the connection for 20 seconds, if no connection, we quit
+
+                int counter = 0;
+                while(!connectionAvailable && counter < MAX_WAIT_TIME_SECS) {
+                    mainScreen.setInfoText("RETRYING CONNECTION..."+counter+"/"+MAX_WAIT_TIME_SECS);
+                    try {
+                        Thread.sleep(1000);
+                        counter++;
+                    } catch(InterruptedException ignored) {
+
+                    }
+                }
+                if(counter >= MAX_WAIT_TIME_SECS) {
+                    apiCallStrings.clear();
+                    terminatedSuccessfully = false;
+                    break;
+                }
+                mainScreen.setInfoText("EXTRACTING MFCCs");
+                Iterator<String> i = apiCallStrings.iterator();
+                while(i.hasNext()) {
+                    String s = i.next();
+                    boolean success = callApiForGenre(s);
+                    if(success) {
+                        i.remove();
+                    }
+                }
+            }
             System.out.println("Total time needed for everything: "+(System.currentTimeMillis()-time)/1000+" seconds.");
             boolean finalTerminatedSuccessfully = terminatedSuccessfully;
             mainScreen.setInfoText("Done!");
             uiHandler.post(() -> {
+
+                processStarted = false;
+                cleanUp();
+                mainScreen.resetProgressBar();
                 if(finalTerminatedSuccessfully) {
-                    mainScreen.resetProgressBar();
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("GENRE", calculateAverageGenre());
                     NavHostFragment.findNavController(mainScreen).navigate(R.id.mainScreenToFileScreen, bundle);
-                    mainScreen.stopBackgroundAnimation();
+                } else {
+                    Toast.makeText(mainScreen.requireContext(), "Connection failed...", Toast.LENGTH_SHORT).show();
                 }
             });
         });
     }
     private void cleanUp() {
+        processStarted = false;
         mainScreen.removeInfoText();
-        mainScreen.setButtonsEnabled(true);
+        if(connectionAvailable) {
+            mainScreen.setButtonsEnabled(true);
+        }
         mainScreen.stopBackgroundAnimation();
     }
     private Genre calculateAverageGenre() {
@@ -209,19 +255,25 @@ public class FileUploadController {
             String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
             System.out.println(apiCallString);
             TimerUtil.setEndTime(System.currentTimeMillis());
-
-            ApiHandler apiHandler = new ApiHandler();
-            String answer;
-            try {
-                answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
-            } catch (IOException e) {
-                writeErrorToScreen("Connection to server failed.");
-                return;
+            boolean success = callApiForGenre(apiCallString);
+            if(!success) {
+                apiCallStrings.add(apiCallString);
             }
-            Genre genre = generateGenreFromJson(answer);
-            genres.add(genre);
-            mainScreen.incrementProgressBar();
         };
+    }
+    //Returns false if api call was unsuccessful
+    private boolean callApiForGenre(String apiCallString) {
+        String answer;
+        try {
+            answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
+        } catch (IOException e) {
+
+            return false;
+        }
+        Genre genre = generateGenreFromJson(answer);
+        genres.add(genre);
+        mainScreen.incrementProgressBar();
+        return true;
     }
     public File convert(String filePath) throws JavaLayerException {
         Converter c = new Converter();
@@ -249,10 +301,16 @@ public class FileUploadController {
             boolean connectionExists = ApiHandler.testConnection(FileUploadController.BEATBOT_API_URL);
             if(!connectionExists && connectionAvailable) {
                 mainScreen.setConnectionAvailable(false);
+                if(!processStarted) {
+                    mainScreen.setButtonsEnabled(false);
+                }
                 connectionAvailable = false;
             } else {
                 if(connectionExists && !connectionAvailable) {
                     mainScreen.setConnectionAvailable(true);
+                    if(!processStarted) {
+                        mainScreen.setButtonsEnabled(true);
+                    }
                     connectionAvailable = true;
                 }
             }

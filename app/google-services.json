@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1056552202513",
+    "project_id": "hfu-beatbot",
+    "storage_bucket": "hfu-beatbot.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056552202513:android:7eaa279edca4333f0f9cb0",
+        "android_client_info": {
+          "package_name": "com.theriotjoker.beatbot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1056552202513-hjmlm7nbu72lr6t8ppch8e218t495gt2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm0QaL8M2HeEOv2xQvm_ZrKAIrWV0oP-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1056552202513-hjmlm7nbu72lr6t8ppch8e218t495gt2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

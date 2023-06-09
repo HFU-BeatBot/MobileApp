@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javazoom.jl.converter.Converter;
@@ -34,11 +35,12 @@ public class FileUploadController {
     private static final long MAX_FILE_SIZE_WAV = 100*1024*1024;
     private static final long MAX_FILE_SIZE_MP3 = 15*1024*1024;
     private static final int AUDIO_SNIPPET_LENGTH = 5;
+    private boolean connectionAvailable = false;
     private final MainScreen mainScreen;
 
     public FileUploadController(MainScreen mainScreen) {
         genres = new ArrayList<>();
-        startConnectionCheckDaemon();
+        startConnectionChecker();
         this.mainScreen = mainScreen;
     }
 
@@ -123,7 +125,7 @@ public class FileUploadController {
                 return;
             }
             boolean terminatedSuccessfully;
-            mainScreen.setInfoText("EXTRACTING MFCCs");
+
             AudioArithmeticController audioArithmeticController;
             try {
                 audioArithmeticController = new AudioArithmeticController(inputFile);
@@ -145,7 +147,7 @@ public class FileUploadController {
                 cleanUp();
                 return;
             }
-
+            mainScreen.setInfoText("EXTRACTING MFCCs");
             mainScreen.setButtonsEnabled(false);
             long time = System.currentTimeMillis();
             mainScreen.initializeProgressBar((int)audioLength/AUDIO_SNIPPET_LENGTH);
@@ -179,9 +181,9 @@ public class FileUploadController {
         });
     }
     private void cleanUp() {
+        mainScreen.removeInfoText();
         mainScreen.setButtonsEnabled(true);
         mainScreen.stopBackgroundAnimation();
-        mainScreen.removeInfoText();
     }
     private Genre calculateAverageGenre() {
         double[] array = new double[10];
@@ -237,37 +239,24 @@ public class FileUploadController {
     }
     private void writeErrorToScreen(String error) {
         Handler uiHandler = new Handler(Looper.getMainLooper());
-        uiHandler.post(() -> {
-            Toast.makeText(mainScreen.getContext(), error, Toast.LENGTH_SHORT).show();
-        });
+        uiHandler.post(() -> Toast.makeText(mainScreen.getContext(), error, Toast.LENGTH_SHORT).show());
     }
-    private void startConnectionCheckDaemon() {
-        //If there is no connection, write it to the screen, disable buttons and check every 5 seconds for the connection
-        Thread connectionCheckThread = new Thread(() -> {
-            while (true) {
-                boolean success = ApiHandler.testConnection(BEATBOT_API_URL);
-                while (!success) { //If there is no connection, write it to the screen, disable buttons and check every 5 seconds for the connection
-                    mainScreen.setButtonsEnabled(false);
-                    mainScreen.setConnectionAvailable(false);
-                    try {
-                        Thread.sleep(4000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    success = ApiHandler.testConnection(BEATBOT_API_URL);
-                }
-                mainScreen.setConnectionAvailable(true);
-                while (success) {
-                    success = ApiHandler.testConnection(BEATBOT_API_URL);
-                    try {
-                        Thread.sleep(4000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+
+
+    private void startConnectionChecker() {
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            boolean connectionExists = ApiHandler.testConnection(FileUploadController.BEATBOT_API_URL);
+            if(!connectionExists && connectionAvailable) {
+                mainScreen.setConnectionAvailable(false);
+                connectionAvailable = false;
+            } else {
+                if(connectionExists && !connectionAvailable) {
+                    mainScreen.setConnectionAvailable(true);
+                    connectionAvailable = true;
                 }
             }
-        });
-        connectionCheckThread.setDaemon(true);
-        connectionCheckThread.start();
+
+        }, 0, 4, TimeUnit.SECONDS);
     }
 }

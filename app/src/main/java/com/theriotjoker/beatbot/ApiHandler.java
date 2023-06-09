@@ -42,6 +42,5 @@ public class ApiHandler {
         } catch (IOException e) {
             return false;
         }
-
     }
 }

@@ -40,13 +40,24 @@ public class MainScreen extends Fragment {
 
     private FragmentFirstBinding binding;
     private ActivityResultLauncher<Intent> startActivityIntent;
-    private MediaRecorder mediaRecorder;
     private boolean isRecording;
     private FileUploadController fileUploadController;
     private final Handler handler = new Handler();
     private ProgressBar progressBar;
     private WaveRecorder waveRecorder;
     private AnimationDrawable animationDrawable;
+    private boolean recordingCooldown;
+    private final Runnable animationRunnable = new Runnable() {
+
+        //makes the pulsing animation for the "BB" Button when recording.
+        @Override
+        public void run() {
+            pulsate(binding.pulseImage1,1000,3.0f);
+            pulsate(binding.pulseImage2,700,3.0f);
+            handler.postDelayed(this, 1500);
+        }
+    };
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         fileUploadController = new FileUploadController(this);
@@ -54,6 +65,7 @@ public class MainScreen extends Fragment {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
         progressBar = binding.progressBar;
+        recordingCooldown = false;
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -109,6 +121,7 @@ public class MainScreen extends Fragment {
                 stopRecording();
                 String pathToFile = waveRecorder.filePath+"/final_record.wav";
                 fileUploadController.getGenreFromFile(new File(pathToFile));
+
                 //TODO DEBUG MEASURE
                 /*MediaPlayer mediaPlayer1 = new MediaPlayer();
                 try {
@@ -119,12 +132,14 @@ public class MainScreen extends Fragment {
                     throw new RuntimeException(e);
                 }*/
             } else {
-                setUseFileButtonEnabled(false);
-                startTimerUpdate();
-                waveRecorder.startRecording();
-                startBackgroundAnimation();
-                startPulsing();
-                isRecording = true;
+                if(!recordingCooldown) {
+                    setUseFileButtonEnabled(false);
+                    startTimerUpdate();
+                    waveRecorder.startRecording();
+                    startBackgroundAnimation();
+                    startPulsing();
+                    isRecording = true;
+                }
             }
         });
     }
@@ -132,9 +147,11 @@ public class MainScreen extends Fragment {
         waveRecorder.stopRecording();
         stopPulsing();
         stopBackgroundAnimation();
+        setUseFileButtonEnabled(true);
         binding.infoTextView.setVisibility(View.INVISIBLE);
         binding.infoTextView.setText("0s");
         isRecording = false;
+        recordingCooldown = true;
     }
 
     @Override
@@ -142,8 +159,8 @@ public class MainScreen extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-    private void startTimerUpdate() {
-        handler.post(new Runnable() {
+    private Runnable getTimerUpdateRunnable() {
+        return new Runnable() {
             @Override
             public void run() {
                 final String timeInfo = "TIME ELAPSED: ";
@@ -164,9 +181,15 @@ public class MainScreen extends Fragment {
                     String toShow = timeInfo+secondsElapsed+"s";
                     binding.infoTextView.setText(toShow);
                     handler.postDelayed(this, 1000);
+                } else {
+                    recordingCooldown=false;
                 }
             }
-        });
+        };
+
+    }
+    private void startTimerUpdate() {
+        handler.post(getTimerUpdateRunnable());
     }
     private void startPulsing() {
         animationRunnable.run();
@@ -176,16 +199,6 @@ public class MainScreen extends Fragment {
         handler.removeCallbacks(animationRunnable);
     }
 
-    private final Runnable animationRunnable = new Runnable() {
-
-        //makes the pulsing animation for the "BB" Button when recording.
-        @Override
-        public void run() {
-            pulsate(binding.pulseImage1,1000,3.0f);
-            pulsate(binding.pulseImage2,700,3.0f);
-            handler.postDelayed(this, 1500);
-        }
-    };
 
     private void pulsate(ImageView pulsatingImage, long duration, float scale){
         //duration describes how fast the circle expand, scale describes its maximum size.
@@ -266,15 +279,12 @@ public class MainScreen extends Fragment {
         });
     }
     public void setInfoText(String text) {
-        requireActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(binding.infoTextView.getVisibility() == View.INVISIBLE) {
-                    binding.infoTextView.setVisibility(View.VISIBLE);
-                }
-                binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
-                binding.infoTextView.setText(text);
+        requireActivity().runOnUiThread(() -> {
+            if(binding.infoTextView.getVisibility() == View.INVISIBLE) {
+                binding.infoTextView.setVisibility(View.VISIBLE);
             }
+            binding.infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
+            binding.infoTextView.setText(text);
         });
     }
     public void removeInfoText() {

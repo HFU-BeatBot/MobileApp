@@ -76,8 +76,7 @@ public class ResultScreen extends Fragment {
         graphXAxis.setLabelRotationAngle(45f);
         //Setting the bar chart design
         genreBarChart.getLegend().setEnabled(false); //no legend, since it is self explanatory
-        genreBarChart.getAxisLeft().setDrawGridLines(true); //removing y lines, not necessary
-        genreBarChart.getAxisRight().setDrawGridLines(false); //likewise removing y lines, not necessary
+        genreBarChart.getAxisLeft().setDrawGridLines(true); //add y lines, so the graph looks more readable
         genreBarChart.setBorderColor(Color.BLACK); //border should be black
         genreBarChart.setData(genreChartData); //setting the data created above
         genreBarChart.setFitBars(true);  //left and right side have a bit of padding, so that every bar is evenly spaced

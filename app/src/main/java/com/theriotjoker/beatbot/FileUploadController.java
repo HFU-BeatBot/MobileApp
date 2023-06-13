@@ -32,7 +32,6 @@ import javazoom.jl.decoder.JavaLayerException;
 
 public class FileUploadController {
     private final ArrayList<Genre> genres;
-    private static final String BEATBOT_API_URL = "http://gamers-galaxy.ddns.net:8000/process";
     private static final long MAX_FILE_SIZE_WAV = 100*1024*1024;
     private static final long MAX_FILE_SIZE_MP3 = 15*1024*1024;
     private static final int AUDIO_SNIPPET_LENGTH = 5;
@@ -133,17 +132,11 @@ public class FileUploadController {
         });
     }
     public void getGenreFromFile(@NonNull File inputFile) {
-
         genres.clear();
         Executor executor = Executors.newSingleThreadExecutor();
         Handler uiHandler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
             processStarted = true;
-            if(!ApiHandler.testConnection(BEATBOT_API_URL)) {
-                writeErrorToScreen("Connection failed...");
-                cleanUp();
-                return;
-            }
             boolean terminatedSuccessfully;
 
             AudioArithmeticController audioArithmeticController;
@@ -250,7 +243,6 @@ public class FileUploadController {
         processStarted = false;
         mainScreen.removeInfoText();
         mainScreen.resetProgressBar();
-        genres.clear();
         apiCallStrings.clear();
         if(connectionAvailable) {
             mainScreen.setButtonsEnabled(true);
@@ -282,7 +274,6 @@ public class FileUploadController {
             TimerUtil.setStartTime(System.currentTimeMillis());
             String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_LENGTH);
             String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
-            System.out.println(apiCallString);
             TimerUtil.setEndTime(System.currentTimeMillis());
             boolean success = callApiForGenre(apiCallString);
             if(!success && !shutdownForcefully) { //if the thread is interrupted at just the right time, callApiForGenre will throw an IOException named "thread interrupted" so we need to check if
@@ -295,7 +286,7 @@ public class FileUploadController {
     private boolean callApiForGenre(String apiCallString) {
         String answer;
         try {
-            answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
+            answer = apiHandler.sendPostToApi(apiCallString);
         } catch (IOException e) { //e is also a "thread interrupted" exception
             return false;
         }
@@ -327,7 +318,7 @@ public class FileUploadController {
     private void startConnectionChecker() {
         ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutorService.scheduleAtFixedRate(() -> {
-            boolean connectionExists = ApiHandler.testConnection(FileUploadController.BEATBOT_API_URL);
+            boolean connectionExists = ApiHandler.testConnection();
             if(!connectionExists && connectionAvailable) {
                 mainScreen.setConnectionAvailable(false);
                 if(!processStarted) {

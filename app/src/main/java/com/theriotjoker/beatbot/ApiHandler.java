@@ -10,8 +10,11 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 public class ApiHandler {
-    public String sendPostToApi(String url, String json) throws IOException {
-        HttpURLConnection connection = prepareConnection(url);
+    private static final String BEATBOT_API_URL = "http://gamers-galaxy.ddns.net:8000";
+    private static final String BEATBOT_SERVICE = "/process";
+    private static final String BEATBOT_CONNECTION_TEST= "/is_service_running";
+    public String sendPostToApi(String json) throws IOException {
+        HttpURLConnection connection = prepareConnection();
         OutputStream os = connection.getOutputStream();
         os.write(json.getBytes(Charset.defaultCharset()));
         os.flush();
@@ -24,21 +27,31 @@ public class ApiHandler {
         connection.disconnect();
         return fullAnswerBuffer.toString();
     }
-    private HttpURLConnection prepareConnection(String url) throws IOException {
+    private HttpURLConnection prepareConnection() throws IOException {
+        String url = BEATBOT_API_URL+BEATBOT_SERVICE;
         URL apiUrl = new URL(url);
         HttpURLConnection connection = (HttpURLConnection)apiUrl.openConnection();
+        connection.setConnectTimeout(1000);
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
         return connection;
     }
-    public static boolean testConnection(String url) {
+    public static boolean testConnection() {
         try {
-            URL connectionTestURl = new URL(url);
+            URL connectionTestURl = new URL(BEATBOT_API_URL+BEATBOT_CONNECTION_TEST);
             HttpURLConnection connection = (HttpURLConnection) connectionTestURl.openConnection();
+            connection.setConnectTimeout(1000);
             connection.connect();
+            BufferedReader bf = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder fullAnswerBuffer = new StringBuilder();
+            String incoming;
+            while((incoming = bf.readLine()) != null) {
+                fullAnswerBuffer.append(incoming);
+            }
+            bf.close();
             connection.disconnect();
-            return true;
+            return fullAnswerBuffer.toString().equals("{\"is_running\":true}");
         } catch (IOException e) {
             return false;
         }

@@ -110,6 +110,10 @@ public class MainScreen extends Fragment {
         messageDialog.show();
     }
 
+    public void stopConnectionChecker() {
+        fileUploadController.stopConnectionChecker();
+    }
+
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setButtonsEnabled(false);
@@ -279,6 +283,9 @@ public class MainScreen extends Fragment {
                 } else {
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.offline);
+                    if(isRecording) {
+                        stopRecording();
+                    }
                 }
             }
         });

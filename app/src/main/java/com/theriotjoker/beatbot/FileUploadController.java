@@ -41,6 +41,7 @@ public class FileUploadController {
     private final MainScreen mainScreen;
     private final ApiHandler apiHandler;
     private ArrayList<String> apiCallStrings;
+    private ScheduledExecutorService scheduledExecutorService;
     private ExecutorService executorService;
 
     public FileUploadController(MainScreen mainScreen) {
@@ -231,6 +232,9 @@ public class FileUploadController {
             });
         });
     }
+    public void stopConnectionChecker() {
+        scheduledExecutorService.shutdownNow();
+    }
     public void stopProcess() {
         if(executorService != null) {
             executorService.shutdownNow();
@@ -316,22 +320,24 @@ public class FileUploadController {
 
 
     private void startConnectionChecker() {
-        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutorService.scheduleAtFixedRate(() -> {
-            boolean connectionExists = ApiHandler.testConnection();
-            if(!connectionExists && connectionAvailable) {
-                mainScreen.setConnectionAvailable(false);
-                if(!processStarted) {
-                    mainScreen.setButtonsEnabled(false);
-                }
-                connectionAvailable = false;
-            } else {
-                if(connectionExists && !connectionAvailable) {
-                    mainScreen.setConnectionAvailable(true);
+            if(!Thread.currentThread().isInterrupted()) {
+                boolean connectionExists = ApiHandler.testConnection();
+                if(!connectionExists && connectionAvailable) {
+                    mainScreen.setConnectionAvailable(false);
                     if(!processStarted) {
-                        mainScreen.setButtonsEnabled(true);
+                        mainScreen.setButtonsEnabled(false);
                     }
-                    connectionAvailable = true;
+                    connectionAvailable = false;
+                } else {
+                    if(connectionExists && !connectionAvailable) {
+                        mainScreen.setConnectionAvailable(true);
+                        if(!processStarted) {
+                            mainScreen.setButtonsEnabled(true);
+                        }
+                        connectionAvailable = true;
+                    }
                 }
             }
 

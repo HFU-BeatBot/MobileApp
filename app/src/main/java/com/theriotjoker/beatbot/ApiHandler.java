@@ -43,15 +43,7 @@ public class ApiHandler {
             HttpURLConnection connection = (HttpURLConnection) connectionTestURl.openConnection();
             connection.setConnectTimeout(1000);
             connection.connect();
-            BufferedReader bf = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder fullAnswerBuffer = new StringBuilder();
-            String incoming;
-            while((incoming = bf.readLine()) != null) {
-                fullAnswerBuffer.append(incoming);
-            }
-            bf.close();
-            connection.disconnect();
-            return fullAnswerBuffer.toString().equals("{\"is_running\":true}");
+            return true;
         } catch (IOException e) {
             return false;
         }

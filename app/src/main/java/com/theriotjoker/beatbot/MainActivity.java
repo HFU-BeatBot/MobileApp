@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     }, 1500);
                 } else {
                     pressedBackRecently = false;
+                    mainScreen.stopConnectionChecker();
                     finish();
                 }
             }

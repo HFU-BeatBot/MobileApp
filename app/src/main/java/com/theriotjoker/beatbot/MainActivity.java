@@ -47,8 +47,12 @@ public class MainActivity extends AppCompatActivity {
             Navigation.findNavController(navHostFragment.getView()).navigate(R.id.fileScreenToMainScreen);
         } else {
             MainScreen mainScreen =(MainScreen)currentFragment;
-            if(mainScreen.isRecording()) {
-                mainScreen.stopRecording();
+            if(mainScreen.isRecording() || mainScreen.isProcessStarted()) {
+                if(mainScreen.isRecording()) {
+                    mainScreen.stopRecording();
+                } else {
+                    mainScreen.stopProcess();
+                }
             } else {
                 if(!pressedBackRecently) {
                     Toast.makeText(currentFragment.requireContext(), "Please press back again to exit the app", Toast.LENGTH_SHORT).show();

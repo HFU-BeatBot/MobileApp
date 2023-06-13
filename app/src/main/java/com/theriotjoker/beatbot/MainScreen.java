@@ -63,6 +63,10 @@ public class MainScreen extends Fragment {
         }
     };
 
+    public boolean isProcessStarted() {
+        return fileUploadController.isProcessStarted();
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         fileUploadController = new FileUploadController(this);
@@ -298,5 +302,9 @@ public class MainScreen extends Fragment {
     }
     public boolean isRecording() {
         return isRecording;
+    }
+
+    public void stopProcess() {
+        fileUploadController.stopProcess();
     }
 }

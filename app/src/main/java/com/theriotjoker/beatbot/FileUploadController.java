@@ -38,9 +38,11 @@ public class FileUploadController {
     private static final int AUDIO_SNIPPET_LENGTH = 5;
     private boolean connectionAvailable = false;
     private boolean processStarted = false;
+    private boolean shutdownForcefully = false;
     private final MainScreen mainScreen;
     private final ApiHandler apiHandler;
     private ArrayList<String> apiCallStrings;
+    private ExecutorService executorService;
 
     public FileUploadController(MainScreen mainScreen) {
         apiCallStrings = new ArrayList<>();
@@ -48,6 +50,10 @@ public class FileUploadController {
         apiHandler = new ApiHandler();
         startConnectionChecker();
         this.mainScreen = mainScreen;
+    }
+
+    public boolean isProcessStarted() {
+        return processStarted;
     }
 
     public String getFileNameFromUri(Uri uri) {
@@ -119,6 +125,10 @@ public class FileUploadController {
                     return;
                 }
             }
+            if(shutdownForcefully) {
+                cleanUp();
+                return;
+            }
             getGenreFromFile(f);
         });
     }
@@ -161,13 +171,13 @@ public class FileUploadController {
             mainScreen.setButtonsEnabled(false);
             long time = System.currentTimeMillis();
             mainScreen.initializeProgressBar((int)audioLength/AUDIO_SNIPPET_LENGTH);
-            ArrayList<Runnable> runnables = new ArrayList<>();
+            ArrayList<Runnable> conversionTasks = new ArrayList<>();
             for(int i = 0; i+AUDIO_SNIPPET_LENGTH < audioLength; i = i+AUDIO_SNIPPET_LENGTH) {
-                runnables.add(createMFCCTask(i, audioArithmeticController));
+                conversionTasks.add(createMFCCTask(i, audioArithmeticController));
             }
             final int MAX_THREADS = 5;
-            ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
-            for(Runnable r : runnables) {
+            executorService = Executors.newFixedThreadPool(MAX_THREADS);
+            for(Runnable r : conversionTasks) {
                 executorService.execute(r);
             }
             executorService.shutdown();
@@ -205,27 +215,43 @@ public class FileUploadController {
                     }
                 }
             }
+            if(shutdownForcefully) {
+                cleanUp();
+                return;
+            }
             System.out.println("Total time needed for everything: "+(System.currentTimeMillis()-time)/1000+" seconds.");
             boolean finalTerminatedSuccessfully = terminatedSuccessfully;
             mainScreen.setInfoText("Done!");
             uiHandler.post(() -> {
 
-                processStarted = false;
                 cleanUp();
-                mainScreen.resetProgressBar();
                 if(finalTerminatedSuccessfully) {
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("GENRE", calculateAverageGenre());
                     NavHostFragment.findNavController(mainScreen).navigate(R.id.mainScreenToFileScreen, bundle);
                 } else {
-                    Toast.makeText(mainScreen.requireContext(), "Connection failed...", Toast.LENGTH_SHORT).show();
+                    if(!connectionAvailable) {
+                        Toast.makeText(mainScreen.requireContext(), "Connection failed...", Toast.LENGTH_SHORT).show();
+                    }
                 }
+
             });
         });
     }
+    public void stopProcess() {
+        if(executorService != null) {
+            executorService.shutdownNow();
+        }
+        mainScreen.setInfoText("CANCELLING");
+        shutdownForcefully = true;
+    }
     private void cleanUp() {
+        shutdownForcefully = false;
         processStarted = false;
         mainScreen.removeInfoText();
+        mainScreen.resetProgressBar();
+        genres.clear();
+        apiCallStrings.clear();
         if(connectionAvailable) {
             mainScreen.setButtonsEnabled(true);
         }
@@ -250,13 +276,17 @@ public class FileUploadController {
     }
     private Runnable createMFCCTask(int offset, AudioArithmeticController audioArithmeticController) {
         return () -> {
+            if(Thread.currentThread().isInterrupted()) {
+                return;
+            }
             TimerUtil.setStartTime(System.currentTimeMillis());
             String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_LENGTH);
             String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
             System.out.println(apiCallString);
             TimerUtil.setEndTime(System.currentTimeMillis());
             boolean success = callApiForGenre(apiCallString);
-            if(!success) {
+            if(!success && !shutdownForcefully) { //if the thread is interrupted at just the right time, callApiForGenre will throw an IOException named "thread interrupted" so we need to check if
+                //the thread was interrupted to stop the process
                 apiCallStrings.add(apiCallString);
             }
         };
@@ -266,8 +296,7 @@ public class FileUploadController {
         String answer;
         try {
             answer = apiHandler.sendPostToApi(BEATBOT_API_URL, apiCallString);
-        } catch (IOException e) {
-
+        } catch (IOException e) { //e is also a "thread interrupted" exception
             return false;
         }
         Genre genre = generateGenreFromJson(answer);

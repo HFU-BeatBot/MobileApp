@@ -17,7 +17,7 @@ public class ApiHandler {
         os.flush();
         BufferedReader bf = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         StringBuilder fullAnswerBuffer = new StringBuilder();
-        String incoming = null;
+        String incoming;
         while((incoming = bf.readLine()) != null) {
             fullAnswerBuffer.append(incoming);
         }

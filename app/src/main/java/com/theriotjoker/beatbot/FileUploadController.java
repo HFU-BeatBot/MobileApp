@@ -1,12 +1,14 @@
 package com.theriotjoker.beatbot;
 
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -58,16 +60,24 @@ public class FileUploadController {
 
     public String getFileNameFromUri(Uri uri) {
         String returnValue = null;
-        String[] displayNameColumn = {MediaStore.Images.Media.DISPLAY_NAME};
-        try (Cursor cursor  = mainScreen.requireActivity().getContentResolver().query(uri, displayNameColumn, null, null)) {
 
-            if(cursor != null && cursor.moveToFirst()) {
-                int columnIndexOfName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
-                returnValue = cursor.getString(columnIndexOfName);
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = mainScreen.requireActivity().getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    @SuppressLint("Range") String displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                    if (displayName != null) {
+                        returnValue = displayName;
+                    }
+                }
+            } catch (Exception e) {
+                writeErrorToScreen("The file could not be read.");
             }
-        } catch(Exception e) {
-            writeErrorToScreen("The file could not be read.");
         }
+
+        if (returnValue == null) {
+            returnValue = uri.getLastPathSegment();
+        }
+
         return returnValue;
     }
     private File getFileObjectFromUri(Uri uri) {
@@ -137,6 +147,7 @@ public class FileUploadController {
         Executor executor = Executors.newSingleThreadExecutor();
         Handler uiHandler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
+
             processStarted = true;
             boolean terminatedSuccessfully;
 
@@ -159,6 +170,9 @@ public class FileUploadController {
             } catch (IOException | WavFileException e) {
                 writeErrorToScreen("The file could not be read."+e.getMessage());
                 cleanUp();
+                return;
+            }
+            if(shutdownForcefully) {
                 return;
             }
             mainScreen.setInfoText("EXTRACTING MFCCs");

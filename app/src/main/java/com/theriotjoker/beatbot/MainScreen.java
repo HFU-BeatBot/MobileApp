@@ -85,7 +85,7 @@ public class MainScreen extends Fragment {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         buildDialogForFile(result.getData());
                     } else {
-                        Toast.makeText(getContext(),"File could not be selected.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(),"No file selected.", Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -118,6 +118,7 @@ public class MainScreen extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setButtonsEnabled(false);
         setConnectionAvailable(false);
+
         super.onViewCreated(view, savedInstanceState);
         animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
         if(animationDrawable != null) {
@@ -158,6 +159,7 @@ public class MainScreen extends Fragment {
                 }
             }
         });
+
     }
     public void stopRecording() {
         waveRecorder.stopRecording();
@@ -176,6 +178,9 @@ public class MainScreen extends Fragment {
         binding = null;
     }
     private Runnable getTimerUpdateRunnable() {
+        final int MINIMUM_RECORDING_TIME = 6;
+        final int MAXIMUM_RECORDING_TIME = 225;
+        final int WARNING_INTERVAL_TIME = 15;
         return new Runnable() {
             @Override
             public void run() {
@@ -191,8 +196,21 @@ public class MainScreen extends Fragment {
                     s = s.substring(timeInfo.length(),s.length()-1);
                     int secondsElapsed = Integer.parseInt(s);
                     secondsElapsed++;
-                    if(secondsElapsed > 6) {
+                    if(secondsElapsed > MINIMUM_RECORDING_TIME) {
                         infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
+                    }
+                    if(secondsElapsed > MAXIMUM_RECORDING_TIME-WARNING_INTERVAL_TIME) {
+                        infoTextView.setTextColor(ResourcesCompat.getColor(getResources(), R.color.yellow, null));
+                        int secondsLeft = MAXIMUM_RECORDING_TIME-secondsElapsed;
+                        if(secondsLeft % 5 == 0) {
+                            String warningText = secondsLeft+ " seconds left";
+                            Toast.makeText(requireContext(), warningText, Toast.LENGTH_SHORT).show();
+
+                        }
+                    }
+                    if(secondsElapsed > MAXIMUM_RECORDING_TIME) {
+                        Toast.makeText(requireContext(),"The recording is too long...", Toast.LENGTH_SHORT).show();
+                        stopRecording();
                     }
                     String toShow = timeInfo+secondsElapsed+"s";
                     infoTextView.setText(toShow);

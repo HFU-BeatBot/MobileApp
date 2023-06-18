@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.widget.Toast;
 
@@ -36,7 +35,9 @@ public class FileUploadController {
     private final ArrayList<Genre> genres;
     private static final long MAX_FILE_SIZE_WAV = 100*1024*1024;
     private static final long MAX_FILE_SIZE_MP3 = 15*1024*1024;
-    private static final int AUDIO_SNIPPET_LENGTH = 5;
+    private static final int AUDIO_SNIPPET_DURATION = 5;
+    public static final int MAX_RECORDING_DURATION = 200;
+    public static final int MIN_RECORDING_DURATION = AUDIO_SNIPPET_DURATION +1;
     private boolean connectionAvailable = false;
     private boolean processStarted = false;
     private boolean shutdownForcefully = false;
@@ -162,7 +163,7 @@ public class FileUploadController {
             long audioLength;
             try {
                 audioLength = audioArithmeticController.getLengthOfAudio();
-                if(audioLength <= AUDIO_SNIPPET_LENGTH) {
+                if(audioLength <= AUDIO_SNIPPET_DURATION) {
                     writeErrorToScreen("The length of the recording is too short...");
                     cleanUp();
                     return;
@@ -178,9 +179,9 @@ public class FileUploadController {
             mainScreen.setInfoText("EXTRACTING MFCCs");
             mainScreen.setButtonsEnabled(false);
             long time = System.currentTimeMillis();
-            mainScreen.initializeProgressBar((int)audioLength/AUDIO_SNIPPET_LENGTH);
+            mainScreen.initializeProgressBar((int)audioLength/ AUDIO_SNIPPET_DURATION);
             ArrayList<Runnable> conversionTasks = new ArrayList<>();
-            for(int i = 0; i+AUDIO_SNIPPET_LENGTH < audioLength; i = i+AUDIO_SNIPPET_LENGTH) {
+            for(int i = 0; i+ AUDIO_SNIPPET_DURATION < audioLength; i = i+ AUDIO_SNIPPET_DURATION) {
                 conversionTasks.add(createMFCCTask(i, audioArithmeticController));
             }
             final int MAX_THREADS = 5;
@@ -290,7 +291,7 @@ public class FileUploadController {
                 return;
             }
             TimerUtil.setStartTime(System.currentTimeMillis());
-            String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_LENGTH);
+            String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_DURATION);
             String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
             TimerUtil.setEndTime(System.currentTimeMillis());
             boolean success = callApiForGenre(apiCallString);

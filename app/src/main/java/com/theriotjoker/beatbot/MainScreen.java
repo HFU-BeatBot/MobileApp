@@ -8,15 +8,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.Drawable;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -178,8 +174,6 @@ public class MainScreen extends Fragment {
         binding = null;
     }
     private Runnable getTimerUpdateRunnable() {
-        final int MINIMUM_RECORDING_TIME = 6;
-        final int MAXIMUM_RECORDING_TIME = 225;
         final int WARNING_INTERVAL_TIME = 15;
         return new Runnable() {
             @Override
@@ -196,19 +190,18 @@ public class MainScreen extends Fragment {
                     s = s.substring(timeInfo.length(),s.length()-1);
                     int secondsElapsed = Integer.parseInt(s);
                     secondsElapsed++;
-                    if(secondsElapsed > MINIMUM_RECORDING_TIME) {
+                    if(secondsElapsed > FileUploadController.MIN_RECORDING_DURATION) {
                         infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
                     }
-                    if(secondsElapsed > MAXIMUM_RECORDING_TIME-WARNING_INTERVAL_TIME) {
+                    if(secondsElapsed > FileUploadController.MAX_RECORDING_DURATION - WARNING_INTERVAL_TIME) {
                         infoTextView.setTextColor(ResourcesCompat.getColor(getResources(), R.color.yellow, null));
-                        int secondsLeft = MAXIMUM_RECORDING_TIME-secondsElapsed;
+                        int secondsLeft = FileUploadController.MAX_RECORDING_DURATION -secondsElapsed;
                         if(secondsLeft % 5 == 0) {
                             String warningText = secondsLeft+ " seconds left";
                             Toast.makeText(requireContext(), warningText, Toast.LENGTH_SHORT).show();
-
                         }
                     }
-                    if(secondsElapsed > MAXIMUM_RECORDING_TIME) {
+                    if(secondsElapsed > FileUploadController.MAX_RECORDING_DURATION) {
                         Toast.makeText(requireContext(),"The recording is too long...", Toast.LENGTH_SHORT).show();
                         stopRecording();
                     }

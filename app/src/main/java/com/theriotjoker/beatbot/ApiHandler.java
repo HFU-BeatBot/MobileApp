@@ -12,7 +12,6 @@ import java.nio.charset.Charset;
 public class ApiHandler {
     private static final String BEATBOT_API_URL = "http://gamers-galaxy.ddns.net:8000";
     private static final String BEATBOT_SERVICE = "/process";
-    private static final String BEATBOT_CONNECTION_TEST= "/is_service_running";
     public String sendPostToApi(String json) throws IOException {
         HttpURLConnection connection = prepareConnection();
         OutputStream os = connection.getOutputStream();
@@ -39,7 +38,7 @@ public class ApiHandler {
     }
     public static boolean testConnection() {
         try {
-            URL connectionTestURl = new URL(BEATBOT_API_URL+BEATBOT_CONNECTION_TEST);
+            URL connectionTestURl = new URL(BEATBOT_API_URL);
             HttpURLConnection connection = (HttpURLConnection) connectionTestURl.openConnection();
             connection.setConnectTimeout(1000);
             connection.connect();

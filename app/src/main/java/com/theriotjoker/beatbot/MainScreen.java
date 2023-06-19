@@ -226,7 +226,9 @@ public class MainScreen extends Fragment {
         handler.removeCallbacks(animationRunnable);
     }
 
-
+    public String getCurrentInfoText() {
+        return infoTextView.getText().toString();
+    }
     private void pulsate(ImageView pulsatingImage, long duration, float scale){
         //duration describes how fast the circle expand, scale describes its maximum size.
         pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(() ->

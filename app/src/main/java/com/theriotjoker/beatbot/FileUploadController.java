@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +35,9 @@ import javazoom.jl.decoder.JavaLayerException;
 public class FileUploadController {
     //genres saves all results of all api calls
     private final ArrayList<Genre> genres;
+    private static final String[] screenMessages = {"Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
+    private static final String[] wavConversionMessages = {"Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
+    private static final String[] cancellingMessages = {"Abruptly Aborting Mission", "Ceasing Operation", "Reversing Course: Operation Cancelled", "Halting Process, Returning to Normal", "Disengaging and Abandoning Mission", "Abort! Abort! Task Cancelled", "Mission Aborted: Napping Instead", "Eject Button Pressed"};
     private static final long MAX_FILE_SIZE_WAV = 100*1024*1024;
     private static final long MAX_FILE_SIZE_MP3 = 15*1024*1024;
     private static final int AUDIO_SNIPPET_DURATION = 5;
@@ -117,6 +121,10 @@ public class FileUploadController {
         selectedFile.deleteOnExit();
         return selectedFile;
     }
+    private String getRandomEntryFromArray(String[] array) {
+        Random random = new Random();
+        return array[random.nextInt(array.length)];
+    }
 
     //this function is part 1 of 2 functions:
     //in this one an uri gets taken and transformed into a java.util.File
@@ -142,7 +150,7 @@ public class FileUploadController {
                     return;
                 }
                 try {
-                    mainScreen.setInfoText("CONVERTING TO .WAV");
+                    mainScreen.setInfoText(getRandomEntryFromArray(wavConversionMessages));
                     f = convert(f.getPath());
                 } catch (JavaLayerException e) {
                     writeErrorToScreen("The selected file could not be converted...");
@@ -180,12 +188,15 @@ public class FileUploadController {
     //check if some api calls failed and repeat them
     //get the average and let the UI go to the next screen with the genre data
     public void getGenreFromFile(@NonNull File inputFile) {
+
         genres.clear();
+
         Executor executor = Executors.newSingleThreadExecutor();
         Handler uiHandler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
 
             processStarted = true;
+            startTextChanger();
             boolean terminatedSuccessfully;
             AudioArithmeticController audioArithmeticController;
             try {
@@ -208,10 +219,10 @@ public class FileUploadController {
                 cleanUp();
                 return;
             }
+
             if(shutdownForcefully) {
                 return;
             }
-            mainScreen.setInfoText("EXTRACTING MFCCs");
             mainScreen.setButtonsEnabled(false);
             long time = System.currentTimeMillis();
             mainScreen.initializeProgressBar((int)audioLength/ AUDIO_SNIPPET_DURATION); //creating the progress bar
@@ -226,39 +237,13 @@ public class FileUploadController {
             }
             executorService.shutdown(); //we will not accept any further tasks
             try {
-                terminatedSuccessfully = executorService.awaitTermination(300, TimeUnit.SECONDS); //we wait for 5 minutes (max) for the conversion to be done, usually the conversion takes 10-20 sec.
+               terminatedSuccessfully = executorService.awaitTermination(300, TimeUnit.SECONDS);
+
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            final int MAX_WAIT_TIME_SECS = 20;
-            while(!apiCallStrings.isEmpty()) { //if the call strings are not empty, that means that our connection got cut off somewhere along the way, so we shall retry
-                //We will wait for the connection for 20 seconds, if no connection, we quit
-
-                int counter = 0;
-                while(!connectionAvailable && counter < MAX_WAIT_TIME_SECS) { //if the connection is cut, and we haven't waited for 20 seconds, we need to wait
-                    mainScreen.setInfoText("RETRYING CONNECTION..."+counter+"/"+MAX_WAIT_TIME_SECS);
-                    try {
-                        Thread.sleep(1000);
-                        counter++;
-                    } catch(InterruptedException ignored) {
-
-                    }
-                }
-                if(counter >= MAX_WAIT_TIME_SECS && !connectionAvailable) { //if we waited for long enough and the connection is still off, we go back without a result
-                    apiCallStrings.clear();
-                    terminatedSuccessfully = false;
-                    break;
-                }
-                //otherwise if the connection is re-established, we can work with the rest of the api call strings
-                mainScreen.setInfoText("EXTRACTING MFCCs");
-                Iterator<String> i = apiCallStrings.iterator();
-                while(i.hasNext()) {
-                    String s = i.next();
-                    boolean success = callApiForGenre(s);
-                    if(success) {
-                        i.remove();
-                    }
-                }
+            if(terminatedSuccessfully) {
+                terminatedSuccessfully = checkForFailedPackets();
             }
             if(shutdownForcefully) {
                 cleanUp();
@@ -269,7 +254,6 @@ public class FileUploadController {
             mainScreen.setInfoText("Done!");
             //handler.post is used to update the UI when the process is done
             uiHandler.post(() -> {
-
                 cleanUp();
                 if(finalTerminatedSuccessfully) {
                     Bundle bundle = new Bundle();
@@ -285,6 +269,59 @@ public class FileUploadController {
             });
         });
     }
+
+    private boolean checkForFailedPackets() {
+        boolean returnValue = true;
+        final int MAX_WAIT_TIME_SECS = 20;
+        while(!apiCallStrings.isEmpty()) { //if the call strings are not empty, that means that our connection got cut off somewhere along the way, so we shall retry
+            //We will wait for the connection for 20 seconds, if no connection, we quit
+
+            int counter = 0;
+            while(!connectionAvailable && counter < MAX_WAIT_TIME_SECS) { //if the connection is cut, and we haven't waited for 20 seconds, we need to wait
+                mainScreen.setInfoText("RETRYING CONNECTION..."+counter+"/"+MAX_WAIT_TIME_SECS);
+                try {
+                    Thread.sleep(1000);
+                    counter++;
+                } catch(InterruptedException ignored) {
+
+                }
+            }
+            if(counter >= MAX_WAIT_TIME_SECS && !connectionAvailable) { //if we waited for long enough and the connection is still off, we go back without a result
+                apiCallStrings.clear();
+                returnValue = false;
+                break;
+            }
+            //otherwise if the connection is re-established, we can work with the rest of the api call strings
+            Iterator<String> i = apiCallStrings.iterator();
+            while(i.hasNext()) {
+                String s = i.next();
+                boolean success = callApiForGenre(s);
+                if(success) {
+                    i.remove();
+                }
+            }
+        }
+        return returnValue;
+    }
+
+    public void startTextChanger() {
+        ScheduledExecutorService textChangerService = Executors.newSingleThreadScheduledExecutor();
+        textChangerService.scheduleAtFixedRate(() -> {
+            String newMessage;
+            do {
+                newMessage = getRandomEntryFromArray(screenMessages);
+            }while(newMessage.contentEquals(mainScreen.getCurrentInfoText()));
+            if(connectionAvailable && processStarted) {
+                mainScreen.setInfoText(newMessage);
+            }
+            if(!processStarted) {
+                System.out.println("Shutting down!!!");
+                textChangerService.shutdownNow();
+            }
+        },0L,5L, TimeUnit.SECONDS);
+
+    }
+
     public void stopConnectionChecker() {
         scheduledExecutorService.shutdownNow();
     }
@@ -294,7 +331,7 @@ public class FileUploadController {
         if(executorService != null) {
             executorService.shutdownNow();
         }
-        mainScreen.setInfoText("CANCELLING");
+        mainScreen.setInfoText(getRandomEntryFromArray(cancellingMessages));
         shutdownForcefully = true;
     }
     //cleanUp is called every time the process finishes, regularly or irregularly

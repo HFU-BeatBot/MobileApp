@@ -5,18 +5,17 @@
     android:id="@+id/resultPageLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/black"
     tools:context=".ResultScreen">
 
     <ImageView
         android:id="@+id/backgroundImage"
         android:layout_width="344dp"
         android:layout_height="328dp"
-        android:src="@drawable/hiphop_1"
+        android:src="@drawable/blues_1"
         app:layout_constraintBottom_toTopOf="@+id/genreBarChart"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:scaleType="centerCrop"
         android:adjustViewBounds="true"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,7 +23,6 @@
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
         android:layout_marginBottom="26dp"
         android:text="@string/genre_title_text"
         android:textSize="30sp"

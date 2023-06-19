@@ -188,13 +188,12 @@ public class FileUploadController {
     //check if some api calls failed and repeat them
     //get the average and let the UI go to the next screen with the genre data
     public void getGenreFromFile(@NonNull File inputFile) {
-
         genres.clear();
-
+        final int TERMINATION_TIMEOUT_SECONDS = 300;
+        final int MAX_CONCURRENT_THREADS = 5; //this seems to be a good balance between having a fast application and not consuming too much ram
         Executor executor = Executors.newSingleThreadExecutor();
         Handler uiHandler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
-
             processStarted = true;
             startTextChanger();
             boolean terminatedSuccessfully;
@@ -219,25 +218,23 @@ public class FileUploadController {
                 cleanUp();
                 return;
             }
-
             if(shutdownForcefully) {
+                cleanUp();
                 return;
             }
             mainScreen.setButtonsEnabled(false);
-            long time = System.currentTimeMillis();
             mainScreen.initializeProgressBar((int)audioLength/ AUDIO_SNIPPET_DURATION); //creating the progress bar
             ArrayList<Runnable> conversionTasks = new ArrayList<>(); //the list of tasks which will need to be executed, 1 task for every 5 seconds of a song
             for(int i = 0; i+ AUDIO_SNIPPET_DURATION < audioLength; i = i+ AUDIO_SNIPPET_DURATION) {
                 conversionTasks.add(createMFCCTask(i, audioArithmeticController)); //we create a task for every 5 seconds of a song, with an offset, e.g. 0s -> 5s, 5s -> 10s, etc.
             }
-            final int MAX_THREADS = 5; //this seems to be a good balance between having a fast application and not consuming too much ram
-            executorService = Executors.newFixedThreadPool(MAX_THREADS);
+            executorService = Executors.newFixedThreadPool(MAX_CONCURRENT_THREADS);
             for(Runnable r : conversionTasks) {
                 executorService.execute(r);
             }
             executorService.shutdown(); //we will not accept any further tasks
             try {
-               terminatedSuccessfully = executorService.awaitTermination(300, TimeUnit.SECONDS);
+               terminatedSuccessfully = executorService.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -245,26 +242,21 @@ public class FileUploadController {
             if(terminatedSuccessfully) {
                 terminatedSuccessfully = checkForFailedPackets();
             }
-            if(shutdownForcefully) {
+            if(shutdownForcefully || !terminatedSuccessfully || !connectionAvailable) {
+                if(!terminatedSuccessfully) {
+                    writeErrorToScreen("Conversion Failed: Timed out");
+                }
+                if(!connectionAvailable) {
+                    writeErrorToScreen("Connection failed...");
+                }
                 cleanUp();
                 return;
             }
-            System.out.println("Total time needed for everything: "+(System.currentTimeMillis()-time)/1000+" seconds.");
-            boolean finalTerminatedSuccessfully = terminatedSuccessfully;
-            mainScreen.setInfoText("Done!");
             //handler.post is used to update the UI when the process is done
             uiHandler.post(() -> {
-                cleanUp();
-                if(finalTerminatedSuccessfully) {
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("GENRE", calculateAverageGenre());
-                    NavHostFragment.findNavController(mainScreen).navigate(R.id.mainScreenToFileScreen, bundle);
-                } else {
-                    writeErrorToScreen("Conversion Failed: Timed out");
-                    if(!connectionAvailable) {
-                        writeErrorToScreen("Connection failed...");
-                    }
-                }
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("GENRE", calculateAverageGenre());
+                NavHostFragment.findNavController(mainScreen).navigate(R.id.mainScreenToFileScreen, bundle);
 
             });
         });
@@ -315,7 +307,6 @@ public class FileUploadController {
                 mainScreen.setInfoText(newMessage);
             }
             if(!processStarted) {
-                System.out.println("Shutting down!!!");
                 textChangerService.shutdownNow();
             }
         },0L,5L, TimeUnit.SECONDS);
@@ -339,13 +330,11 @@ public class FileUploadController {
     private void cleanUp() {
         shutdownForcefully = false;
         processStarted = false;
-        mainScreen.removeInfoText();
-        mainScreen.resetProgressBar();
+        mainScreen.stopProcessUI();
         apiCallStrings.clear();
         if(connectionAvailable) {
             mainScreen.setButtonsEnabled(true);
         }
-        mainScreen.stopBackgroundAnimation();
     }
     //calculateAverageGenre() takes the answers of the api calls and calculates an average for each genre
     //by iterating over every api answer, getting the genre confidence values array and adding them on top of the result array
@@ -374,10 +363,8 @@ public class FileUploadController {
             if(Thread.currentThread().isInterrupted()) {
                 return;
             }
-            TimerUtil.setStartTime(System.currentTimeMillis());
             String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_DURATION);
             String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
-            TimerUtil.setEndTime(System.currentTimeMillis());
             boolean success = callApiForGenre(apiCallString);
             if(!success && !shutdownForcefully) { //if the thread is interrupted at just the right time, callApiForGenre will throw an IOException named "thread interrupted" so we need to check if
                 //the thread was interrupted to stop the process and save the string
@@ -431,12 +418,14 @@ public class FileUploadController {
                     mainScreen.setConnectionAvailable(false);
                     if(!processStarted) {
                         mainScreen.setButtonsEnabled(false);
+                        mainScreen.setBackgroundImageVisible(false);
                     }
                     connectionAvailable = false;
                 } else {
                     if(connectionExists && !connectionAvailable) {
                         mainScreen.setConnectionAvailable(true);
                         if(!processStarted) {
+                            mainScreen.setBackgroundImageVisible(true);
                             mainScreen.setButtonsEnabled(true);
                         }
                         connectionAvailable = true;

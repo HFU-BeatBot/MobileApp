@@ -18,4 +18,5 @@
     <string name="zeroseconds">0s</string>
     <string name="offline">Offline</string>
     <string name="online">Online</string>
+    <string name="zero_seconds">0s</string>
 </resources>

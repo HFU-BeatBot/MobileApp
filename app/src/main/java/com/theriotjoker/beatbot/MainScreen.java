@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 
 import java.io.File;
+import java.util.Random;
 
 
 public class MainScreen extends Fragment {
@@ -44,10 +45,13 @@ public class MainScreen extends Fragment {
     private WaveRecorder waveRecorder;
     private AnimationDrawable animationDrawable;
     private boolean recordingCooldown;
+    private final static int[] drawableIds = {R.drawable.blues_1, R.drawable.classical_1, R.drawable.country_1,R.drawable.disco_1, R.drawable.hiphop_1, R.drawable.jazz_1, R.drawable.metal_1, R.drawable.pop_1, R.drawable.reggae_1, R.drawable.rock_1};
+    private int animationImageChooser = 0;
     private ImageButton recordButton;
     private Button useFileButton;
     private TextView infoTextView;
     private TextView onlineStatusTextView;
+    private ImageView backgroundImage;
     private final Runnable animationRunnable = new Runnable() {
 
         //makes the pulsing animation for the "BB" Button when recording.
@@ -73,7 +77,8 @@ public class MainScreen extends Fragment {
         recordButton = binding.bbButton;
         progressBar = binding.progressBar;
         infoTextView = binding.infoTextView;
-        onlineStatusTextView = binding.onlineStauts;
+        onlineStatusTextView = binding.onlineStatus;
+        backgroundImage = binding.backgroundImage;
         recordingCooldown = false;
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -98,6 +103,7 @@ public class MainScreen extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         startBackgroundAnimation();
+                        backgroundImage.setVisibility(View.INVISIBLE);
                         fileUploadController.getGenreFromUri(result.getData());
                         setButtonsEnabled(true);
                     }
@@ -131,41 +137,56 @@ public class MainScreen extends Fragment {
 
         recordButton.setOnClickListener(view2 -> {
             if(isRecording) {
+
                 stopRecording();
                 String pathToFile = waveRecorder.filePath+"/final_record.wav";
                 fileUploadController.getGenreFromFile(new File(pathToFile));
-
-                //TODO DEBUG MEASURE
-                /*MediaPlayer mediaPlayer1 = new MediaPlayer();
-                try {
-                    mediaPlayer1.setDataSource(pathToFile);
-                    mediaPlayer1.prepare();
-                    mediaPlayer1.start();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }*/
             } else {
                 if(!recordingCooldown) {
-                    setUseFileButtonEnabled(false);
-                    startTimerUpdate();
-                    waveRecorder.startRecording();
-                    startBackgroundAnimation();
-                    startPulsing();
-                    isRecording = true;
+                    startRecording();
                 }
             }
         });
+        animateBackgroundImage();
 
+    }
+    private void startRecording() {
+        backgroundImage.setVisibility(View.INVISIBLE);
+        setUseFileButtonEnabled(false);
+        startTimerUpdate();
+        waveRecorder.startRecording();
+        startBackgroundAnimation();
+        startPulsing();
+        isRecording = true;
+    }
+    public void stopProcessUI() {
+        removeInfoText();
+        resetProgressBar();
+        setBackgroundImageVisible(true);
+        stopBackgroundAnimation();
     }
     public void stopRecording() {
         waveRecorder.stopRecording();
         stopPulsing();
         stopBackgroundAnimation();
         setUseFileButtonEnabled(true);
+        backgroundImage.setVisibility(View.VISIBLE);
         infoTextView.setVisibility(View.INVISIBLE);
-        infoTextView.setText("0s");
+        infoTextView.setText(R.string.zero_seconds);
         isRecording = false;
         recordingCooldown = true;
+    }
+    public void setBackgroundImageVisible(boolean visible) {
+        requireActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(visible) {
+                    backgroundImage.setVisibility(View.VISIBLE);
+                } else {
+                    backgroundImage.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
     }
 
     @Override
@@ -235,6 +256,32 @@ public class MainScreen extends Fragment {
                 pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0)
         );
     }
+    private void animateBackgroundImage() {
+        final int ANIMATION_LENGTH_MILLISECONDS = 2000;
+        final Random random = new Random();
+        final int bounds = drawableIds.length;
+        int randomNumber;
+        do {
+            randomNumber = random.nextInt(bounds);
+        } while(randomNumber == animationImageChooser);
+        backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(),drawableIds[randomNumber],null));
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                backgroundImage.animate().alpha(0.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(),drawableIds[animationImageChooser],null));
+                        backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
+                    }
+                });
+                handler.postDelayed(this,(int)(ANIMATION_LENGTH_MILLISECONDS*2.5));
+                animationImageChooser = (animationImageChooser + 1) % drawableIds.length;
+
+            }
+        }, 2000);
+
+    }
     public void initializeProgressBar(int length) {
         handler.post(() -> {
             progressBar.setVisibility(ProgressBar.VISIBLE);
@@ -294,6 +341,7 @@ public class MainScreen extends Fragment {
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.online);
                 } else {
+
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.offline);
                     if(isRecording) {

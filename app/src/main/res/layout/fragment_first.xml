@@ -6,29 +6,42 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_top"
     tools:context=".MainScreen">
+
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_marginTop="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/progressBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/pulseImage2"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:background="@drawable/circle"
+        android:contentDescription="@string/this_image_acts_as_a_part_of_an_animation_and_has_no_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/this_image_acts_as_a_part_of_an_animation_and_has_no_content" />
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/pulseImage1"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:background="@drawable/circle"
 
+        android:contentDescription="@string/this_image_acts_as_a_part_of_an_animation_and_has_no_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/this_image_acts_as_a_part_of_an_animation_and_has_no_content" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <android.widget.ImageButton
         android:id="@+id/bb_button"
@@ -75,14 +88,14 @@
     </ProgressBar>
 
     <TextView
-        android:id="@+id/onlineStauts"
+        android:id="@+id/onlineStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="16dp"
         android:text="@string/online"
         android:textColor="@color/green"
         android:textSize="18sp"
-        android:layout_marginTop="16dp"
-        android:layout_marginRight="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -90,15 +103,16 @@
         android:id="@+id/infoTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="22sp"
+        android:background="@drawable/info_background"
         android:textAlignment="center"
         android:textColor="@color/textColor"
-        android:background="@drawable/info_background"
+        android:textSize="22sp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/pulseImage2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="I am a text"/>
+        tools:text="I am a text" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

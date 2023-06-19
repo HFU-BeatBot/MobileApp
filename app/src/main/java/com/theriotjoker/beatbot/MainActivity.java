@@ -26,15 +26,12 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
     private boolean pressedBackRecently = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        com.theriotjoker.beatbot.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
         Objects.requireNonNull(getSupportActionBar()).hide();
@@ -50,16 +47,32 @@ public class MainActivity extends AppCompatActivity {
                     123);
         }
     }
+
+    //This function controls what happens when the back button is pressed
+    // Possible outcomes:
+    // It will work as a return button if the current screen is resultscreen, going back to the main screen
+    // Otherwise if a conversion or recording is running, it will stop that
+    // Or if the user presses the back button twice quickly, it will exit the app
     @Override
     public void onBackPressed() {
-        //This is a quick, but dirty way of making the back button transition back to the main screen
+        //Get the fragment manager, a class that contains all the fragments of the app
         FragmentManager fragmentManager = getSupportFragmentManager();
+        //use the fragment manager to find the fragment that has all the content
         Fragment navHostFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+        if(navHostFragment == null) {
+            return;
+        }
+        //get the fragment currently displayed
         Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
         if(currentFragment instanceof ResultScreen) {
-            Navigation.findNavController(navHostFragment.getView()).navigate(R.id.fileScreenToMainScreen);
+            //return if we are on the result screen
+            if(navHostFragment.getView() != null) {
+                Navigation.findNavController(navHostFragment.getView()).navigate(R.id.fileScreenToMainScreen);
+            }
         } else {
+            //otherwise we are on the main screen
             MainScreen mainScreen =(MainScreen)currentFragment;
+            //if we are recording or processing a song, stop that
             if(mainScreen.isRecording() || mainScreen.isProcessStarted()) {
                 if(mainScreen.isRecording()) {
                     mainScreen.stopRecording();
@@ -67,16 +80,13 @@ public class MainActivity extends AppCompatActivity {
                     mainScreen.stopProcess();
                 }
             } else {
+                //otherwise the user needs to press back twice quickly to exit the app
                 if(!pressedBackRecently) {
                     Toast.makeText(currentFragment.requireContext(), "Please press back again to exit the app", Toast.LENGTH_SHORT).show();
                     pressedBackRecently = true;
-                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            pressedBackRecently = false;
-                        }
-                    }, 1500);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> pressedBackRecently = false, 1500);
                 } else {
+                    //The routine that closes the app
                     pressedBackRecently = false;
                     mainScreen.stopConnectionChecker();
                     finish();

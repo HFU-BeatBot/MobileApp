@@ -9,13 +9,15 @@ public class AudioArithmeticController {
     private float[][] mfccValues;
     private final float[] magValues;
     private final JLibrosa librosa;
+    private final long audioLength;
     public AudioArithmeticController(File f) throws FileFormatNotSupportedException, IOException, WavFileException {
         this.musicFile = f;
         librosa = new JLibrosa();
         magValues = librosa.loadAndRead(f.getPath(),-1,-1);
+        audioLength = WavFile.openWavFile(musicFile).getDuration();
     }
-    public long getLengthOfAudio() throws IOException, WavFileException {
-        return WavFile.openWavFile(musicFile).getDuration();
+    public long getAudioLength() {
+        return audioLength;
     }
     public String getStringMusicFeaturesFromFile(int offset, int length) {
         populateMFCCValues(offset, length);

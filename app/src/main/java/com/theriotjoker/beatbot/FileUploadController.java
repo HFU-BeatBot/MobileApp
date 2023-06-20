@@ -189,6 +189,7 @@ public class FileUploadController {
     //get the average and let the UI go to the next screen with the genre data
     public void getGenreFromFile(@NonNull File inputFile) {
         genres.clear();
+        mainScreen.setButtonsEnabled(false);
         final int TERMINATION_TIMEOUT_SECONDS = 300;
         final int MAX_CONCURRENT_THREADS = 5; //this seems to be a good balance between having a fast application and not consuming too much ram
         Executor executor = Executors.newSingleThreadExecutor();
@@ -197,32 +198,21 @@ public class FileUploadController {
             processStarted = true;
             startTextChanger();
             boolean terminatedSuccessfully;
-            AudioArithmeticController audioArithmeticController;
-            try {
-                audioArithmeticController = new AudioArithmeticController(inputFile);
-            } catch (FileFormatNotSupportedException | IOException | WavFileException e) {
-                writeErrorToScreen("File could not be read."+e.getMessage());
-                cleanUp();
-                return;
-            }
-            long audioLength;
-            try {
-                audioLength = audioArithmeticController.getLengthOfAudio();
-                if(audioLength <= AUDIO_SNIPPET_DURATION) {
-                    writeErrorToScreen("The length of the recording is too short...");
-                    cleanUp();
-                    return;
-                }
-            } catch (IOException | WavFileException e) {
-                writeErrorToScreen("The file could not be read."+e.getMessage());
-                cleanUp();
-                return;
-            }
             if(shutdownForcefully) {
                 cleanUp();
                 return;
             }
-            mainScreen.setButtonsEnabled(false);
+            AudioArithmeticController audioArithmeticController = initializeAudioController(inputFile);
+            if(audioArithmeticController == null) {
+                cleanUp();
+                return;
+            }
+            final long audioLength = audioArithmeticController.getAudioLength();
+            if(audioLength <= AUDIO_SNIPPET_DURATION) {
+                writeErrorToScreen("The audio duration is too short!");
+                cleanUp();
+                return;
+            }
             mainScreen.initializeProgressBar((int)audioLength/ AUDIO_SNIPPET_DURATION); //creating the progress bar
             ArrayList<Runnable> conversionTasks = new ArrayList<>(); //the list of tasks which will need to be executed, 1 task for every 5 seconds of a song
             for(int i = 0; i+ AUDIO_SNIPPET_DURATION < audioLength; i = i+ AUDIO_SNIPPET_DURATION) {
@@ -236,8 +226,9 @@ public class FileUploadController {
             try {
                terminatedSuccessfully = executorService.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (InterruptedException ignored) {
+                cleanUp();
+                return;
             }
             if(terminatedSuccessfully) {
                 terminatedSuccessfully = checkForFailedPackets();
@@ -261,7 +252,16 @@ public class FileUploadController {
             });
         });
     }
-
+    private AudioArithmeticController initializeAudioController(File inputFile) {
+        AudioArithmeticController audioArithmeticController;
+        try {
+            audioArithmeticController = new AudioArithmeticController(inputFile);
+        } catch (FileFormatNotSupportedException | IOException | WavFileException e) {
+            writeErrorToScreen("File could not be read."+e.getMessage());
+            return null;
+        }
+        return audioArithmeticController;
+    }
     private boolean checkForFailedPackets() {
         boolean returnValue = true;
         final int MAX_WAIT_TIME_SECS = 20;

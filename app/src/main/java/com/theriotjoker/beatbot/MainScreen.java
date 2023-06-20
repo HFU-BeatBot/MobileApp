@@ -62,6 +62,23 @@ public class MainScreen extends Fragment {
             handler.postDelayed(this, 1500);
         }
     };
+    private final Runnable backgroundAnimationRunnable = new Runnable() {
+        final int ANIMATION_LENGTH_MILLISECONDS = 2000;
+        @Override
+        public void run() {
+            if(getContext() != null) {
+                backgroundImage.animate().alpha(0.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), drawableIds[animationImageChooser], null));
+                        backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
+                    }
+                });
+                handler.postDelayed(this, (int) (ANIMATION_LENGTH_MILLISECONDS * 2.5));
+                animationImageChooser = (animationImageChooser + 1) % drawableIds.length;
+            }
+        }
+    };
 
     public boolean isProcessStarted() {
         return fileUploadController.isProcessStarted();
@@ -105,14 +122,14 @@ public class MainScreen extends Fragment {
                         startBackgroundAnimation();
                         backgroundImage.setVisibility(View.INVISIBLE);
                         fileUploadController.getGenreFromUri(result.getData());
-                        setButtonsEnabled(true);
                     }
                 }).setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog messageDialog = alertDialogBuilder.create();
         messageDialog.show();
     }
 
-    public void stopConnectionChecker() {
+    public void exit() {
+        handler.removeCallbacks(backgroundAnimationRunnable);
         fileUploadController.stopConnectionChecker();
     }
 
@@ -257,7 +274,7 @@ public class MainScreen extends Fragment {
         );
     }
     private void animateBackgroundImage() {
-        final int ANIMATION_LENGTH_MILLISECONDS = 2000;
+
         final Random random = new Random();
         final int bounds = drawableIds.length;
         int randomNumber;
@@ -265,21 +282,7 @@ public class MainScreen extends Fragment {
             randomNumber = random.nextInt(bounds);
         } while(randomNumber == animationImageChooser);
         backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(),drawableIds[randomNumber],null));
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                backgroundImage.animate().alpha(0.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS).withEndAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(),drawableIds[animationImageChooser],null));
-                        backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
-                    }
-                });
-                handler.postDelayed(this,(int)(ANIMATION_LENGTH_MILLISECONDS*2.5));
-                animationImageChooser = (animationImageChooser + 1) % drawableIds.length;
-
-            }
-        }, 2000);
+        handler.postDelayed(backgroundAnimationRunnable, 2000);
 
     }
     public void initializeProgressBar(int length) {

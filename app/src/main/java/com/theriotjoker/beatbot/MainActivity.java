@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     //The routine that closes the app
                     pressedBackRecently = false;
-                    mainScreen.stopConnectionChecker();
+                    mainScreen.exit();
                     finish();
                 }
             }

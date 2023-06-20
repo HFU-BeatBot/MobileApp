@@ -30,7 +30,7 @@ public class ApiHandler {
         String url = BEATBOT_API_URL+BEATBOT_SERVICE;
         URL apiUrl = new URL(url);
         HttpURLConnection connection = (HttpURLConnection)apiUrl.openConnection();
-        connection.setConnectTimeout(1000);
+        connection.setConnectTimeout(1500);
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
@@ -40,7 +40,7 @@ public class ApiHandler {
         try {
             URL connectionTestURl = new URL(BEATBOT_API_URL);
             HttpURLConnection connection = (HttpURLConnection) connectionTestURl.openConnection();
-            connection.setConnectTimeout(1000);
+            connection.setConnectTimeout(1500);
             connection.connect();
             return true;
         } catch (IOException e) {

@@ -70,8 +70,10 @@ public class MainScreen extends Fragment {
                 backgroundImage.animate().alpha(0.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS).withEndAction(new Runnable() {
                     @Override
                     public void run() {
-                        backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), drawableIds[animationImageChooser], null));
-                        backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
+                        if(getContext() != null) {
+                            backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), drawableIds[animationImageChooser], null));
+                            backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
+                        }
                     }
                 });
                 handler.postDelayed(this, (int) (ANIMATION_LENGTH_MILLISECONDS * 2.5));
@@ -154,7 +156,6 @@ public class MainScreen extends Fragment {
 
         recordButton.setOnClickListener(view2 -> {
             if(isRecording) {
-
                 stopRecording();
                 String pathToFile = waveRecorder.filePath+"/final_record.wav";
                 fileUploadController.getGenreFromFile(new File(pathToFile));
@@ -187,7 +188,6 @@ public class MainScreen extends Fragment {
         stopPulsing();
         stopBackgroundAnimation();
         setUseFileButtonEnabled(true);
-        backgroundImage.setVisibility(View.VISIBLE);
         infoTextView.setVisibility(View.INVISIBLE);
         infoTextView.setText(R.string.zero_seconds);
         isRecording = false;
@@ -197,7 +197,7 @@ public class MainScreen extends Fragment {
         requireActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(visible) {
+                if(visible && !fileUploadController.isProcessStarted() && !isRecording) {
                     backgroundImage.setVisibility(View.VISIBLE);
                 } else {
                     backgroundImage.setVisibility(View.INVISIBLE);
@@ -251,7 +251,6 @@ public class MainScreen extends Fragment {
                 }
             }
         };
-
     }
     private void startTimerUpdate() {
         handler.post(getTimerUpdateRunnable());
@@ -343,10 +342,12 @@ public class MainScreen extends Fragment {
                 if(isOnline) {
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.online);
+                    setBackgroundImageVisible(true);
                 } else {
 
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.offline);
+                    setBackgroundImageVisible(false);
                     if(isRecording) {
                         stopRecording();
                     }

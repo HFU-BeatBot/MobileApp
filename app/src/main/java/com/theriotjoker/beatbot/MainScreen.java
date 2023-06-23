@@ -32,6 +32,9 @@ import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 
 import java.io.File;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainScreen extends Fragment {
@@ -46,12 +49,18 @@ public class MainScreen extends Fragment {
     private AnimationDrawable animationDrawable;
     private boolean recordingCooldown;
     private final static int[] drawableIds = {R.drawable.blues_1, R.drawable.classical_1, R.drawable.country_1,R.drawable.disco_1, R.drawable.hiphop_1, R.drawable.jazz_1, R.drawable.metal_1, R.drawable.pop_1, R.drawable.reggae_1, R.drawable.rock_1};
+    private static final String[] screenMessages = {"Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
+    private static final String[] wavConversionMessages = {"WAVification Ritual Initiated: Crafting Audio Wonders", "Audio Alchemy: The Art of WAV Transformation", "WAV Transformation Unleashed", "Reshaping Files: Embracing the WAV Destiny", "Enveloping Files in WAV Magic", "Unleashing WAV Power: Converting your File", "Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
+    private static final String[] cancellingMessages = {"Operation Halted: Returning to Base State", "Aborting Task: Resuming Regular Functions", "Mission Termination: Operation Aborted", "Emergency Shutdown: Cancelling Task","Cancelling Protocol Initiated: Halting Progress", "Ceasing Activity: Operation Discontinued", "Interrupting Mission: Returning to Default State", "Reversing Course: Cancelling Task Operations", "Aborting Mission: Resuming Regular Operations","Abruptly Aborting Mission", "Ceasing Operation", "Reversing Course: Operation Cancelled", "Halting Process, Returning to Normal", "Disengaging and Abandoning Mission", "Abort! Abort! Task Cancelled", "Mission Aborted: Napping Instead", "Eject Button Pressed"};
+
     private int animationImageChooser = 0;
+    private boolean isConnectionAvailable = false;
     private ImageButton recordButton;
     private Button useFileButton;
     private TextView infoTextView;
     private TextView onlineStatusTextView;
     private ImageView backgroundImage;
+    final String timeInfo = "TIME ELAPSED: ";
     private final Runnable animationRunnable = new Runnable() {
 
         //makes the pulsing animation for the "BB" Button when recording.
@@ -81,60 +90,6 @@ public class MainScreen extends Fragment {
             }
         }
     };
-
-    public boolean isProcessStarted() {
-        return fileUploadController.isProcessStarted();
-    }
-
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        fileUploadController = new FileUploadController(this);
-        waveRecorder = new WaveRecorder(requireContext().getCacheDir().getPath());
-        binding = FragmentFirstBinding.inflate(inflater, container, false);
-        requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
-        useFileButton = binding.useFileButton;
-        recordButton = binding.bbButton;
-        progressBar = binding.progressBar;
-        infoTextView = binding.infoTextView;
-        onlineStatusTextView = binding.onlineStatus;
-        backgroundImage = binding.backgroundImage;
-        recordingCooldown = false;
-        startActivityIntent = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        buildDialogForFile(result.getData());
-                    } else {
-                        Toast.makeText(getContext(),"No file selected.", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-        if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 30000);
-        }
-        isRecording = false;
-        return binding.getRoot();
-    }
-    private void buildDialogForFile(Intent result) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
-        alertDialogBuilder.setMessage("You have chosen the following file: "+fileUploadController.getFileNameFromUri(result.getData())+". Do you want to upload it?")
-                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        startBackgroundAnimation();
-                        backgroundImage.setVisibility(View.INVISIBLE);
-                        fileUploadController.getGenreFromUri(result.getData());
-                    }
-                }).setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
-        AlertDialog messageDialog = alertDialogBuilder.create();
-        messageDialog.show();
-    }
-
-    public void exit() {
-        handler.removeCallbacks(backgroundAnimationRunnable);
-        fileUploadController.stopConnectionChecker();
-    }
-
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setButtonsEnabled(false);
@@ -166,6 +121,78 @@ public class MainScreen extends Fragment {
             }
         });
         animateBackgroundImage();
+    }
+
+    public boolean isProcessStarted() {
+        return fileUploadController.isProcessStarted();
+    }
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        fileUploadController = new FileUploadController(this);
+        waveRecorder = new WaveRecorder(requireContext().getCacheDir().getPath());
+        binding = FragmentFirstBinding.inflate(inflater, container, false);
+        requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
+        useFileButton = binding.useFileButton;
+        recordButton = binding.bbButton;
+        progressBar = binding.progressBar;
+        infoTextView = binding.infoTextView;
+        onlineStatusTextView = binding.onlineStatus;
+        backgroundImage = binding.backgroundImage;
+        recordingCooldown = false;
+        startActivityIntent = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        buildDialogForFile(result.getData());
+                    } else {
+                        Toast.makeText(getContext(),"No file selected.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 30000);
+        }
+        isRecording = false;
+        return binding.getRoot();
+    }
+
+    private void buildDialogForFile(Intent result) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+        alertDialogBuilder.setMessage("You have chosen the following file: "+fileUploadController.getFileNameFromUri(result.getData())+". Do you want to upload it?")
+                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        startBackgroundAnimation();
+                        fileUploadController.getGenreFromUri(result.getData());
+                    }
+                }).setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
+        AlertDialog messageDialog = alertDialogBuilder.create();
+        messageDialog.show();
+    }
+    public void exit() {
+        handler.removeCallbacks(backgroundAnimationRunnable);
+        fileUploadController.stopConnectionChecker();
+    }
+    private String getRandomEntryFromArray(String[] array) {
+        Random random = new Random();
+        return array[random.nextInt(array.length)];
+    }
+
+    public void startTextChanger() {
+        ScheduledExecutorService textChangerService = Executors.newSingleThreadScheduledExecutor();
+        textChangerService.scheduleAtFixedRate(() -> {
+            System.out.println("HEllo?");
+            String newMessage;
+            do {
+                newMessage = getRandomEntryFromArray(screenMessages);
+            }while(newMessage.contentEquals(getCurrentInfoText()));
+            if(fileUploadController.isProcessStarted() && isConnectionAvailable) {
+                setInfoText(newMessage);
+            }
+            if(!fileUploadController.isProcessStarted()) {
+                textChangerService.shutdownNow();
+            }
+        },0L,5L, TimeUnit.SECONDS);
 
     }
     private void startRecording() {
@@ -176,6 +203,10 @@ public class MainScreen extends Fragment {
         startBackgroundAnimation();
         startPulsing();
         isRecording = true;
+        infoTextView.setVisibility(View.VISIBLE);
+        infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.red,null));
+        String info = timeInfo + "0s";
+        infoTextView.setText(info);
     }
     public void stopProcessUI() {
         removeInfoText();
@@ -188,8 +219,8 @@ public class MainScreen extends Fragment {
         stopPulsing();
         stopBackgroundAnimation();
         setUseFileButtonEnabled(true);
+        infoTextView.setText("");
         infoTextView.setVisibility(View.INVISIBLE);
-        infoTextView.setText(R.string.zero_seconds);
         isRecording = false;
         recordingCooldown = true;
     }
@@ -216,14 +247,7 @@ public class MainScreen extends Fragment {
         return new Runnable() {
             @Override
             public void run() {
-                final String timeInfo = "TIME ELAPSED: ";
                 if(isRecording) {
-                    if(infoTextView.getVisibility() == View.INVISIBLE) {
-                        infoTextView.setVisibility(View.VISIBLE);
-                        infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.red,null));
-                        String info = timeInfo + "0s";
-                       infoTextView.setText(info);
-                    }
                     String s = infoTextView.getText().toString();
                     s = s.substring(timeInfo.length(),s.length()-1);
                     int secondsElapsed = Integer.parseInt(s);
@@ -339,6 +363,7 @@ public class MainScreen extends Fragment {
         requireActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                isConnectionAvailable = isOnline;
                 if(isOnline) {
                     onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
                     onlineStatusTextView.setText(R.string.online);
@@ -378,5 +403,13 @@ public class MainScreen extends Fragment {
 
     public void stopProcess() {
         fileUploadController.stopProcess();
+    }
+
+    public void setConversionText() {
+        setInfoText(getRandomEntryFromArray(wavConversionMessages));
+    }
+
+    public void setCancellingMessage() {
+        setInfoText(getRandomEntryFromArray(cancellingMessages));
     }
 }

@@ -35,9 +35,6 @@ import javazoom.jl.decoder.JavaLayerException;
 public class FileUploadController {
     //genres saves all results of all api calls
     private final ArrayList<Genre> genres;
-    private static final String[] screenMessages = {"Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
-    private static final String[] wavConversionMessages = {"WAVification Ritual Initiated: Crafting Audio Wonders", "Audio Alchemy: The Art of WAV Transformation", "WAV Transformation Unleashed", "Reshaping Files: Embracing the WAV Destiny", "Enveloping Files in WAV Magic", "Unleashing WAV Power: Converting your File", "Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
-    private static final String[] cancellingMessages = {"Operation Halted: Returning to Base State", "Aborting Task: Resuming Regular Functions", "Mission Termination: Operation Aborted", "Emergency Shutdown: Cancelling Task","Cancelling Protocol Initiated: Halting Progress", "Ceasing Activity: Operation Discontinued", "Interrupting Mission: Returning to Default State", "Reversing Course: Cancelling Task Operations", "Aborting Mission: Resuming Regular Operations","Abruptly Aborting Mission", "Ceasing Operation", "Reversing Course: Operation Cancelled", "Halting Process, Returning to Normal", "Disengaging and Abandoning Mission", "Abort! Abort! Task Cancelled", "Mission Aborted: Napping Instead", "Eject Button Pressed"};
     private static final long MAX_FILE_SIZE_WAV = 100*1024*1024;
     private static final long MAX_FILE_SIZE_MP3 = 15*1024*1024;
     private static final int AUDIO_SNIPPET_DURATION = 5;
@@ -121,10 +118,7 @@ public class FileUploadController {
         selectedFile.deleteOnExit();
         return selectedFile;
     }
-    private String getRandomEntryFromArray(String[] array) {
-        Random random = new Random();
-        return array[random.nextInt(array.length)];
-    }
+
 
     //this function is part 1 of 2 functions:
     //in this one an uri gets taken and transformed into a java.util.File
@@ -135,6 +129,7 @@ public class FileUploadController {
         executor.execute(() -> {
             processStarted = true;
             mainScreen.setButtonsEnabled(false);
+            mainScreen.setBackgroundImageVisible(false);
             File f = getFileObjectFromUri(uri);
             //If the file is corrupted, we stop
             if(f == null) {
@@ -150,7 +145,7 @@ public class FileUploadController {
                     return;
                 }
                 try {
-                    mainScreen.setInfoText(getRandomEntryFromArray(wavConversionMessages));
+                    mainScreen.setConversionText();
                     f = convert(f.getPath());
                 } catch (JavaLayerException e) {
                     writeErrorToScreen("The selected file could not be converted...");
@@ -188,15 +183,15 @@ public class FileUploadController {
     //check if some api calls failed and repeat them
     //get the average and let the UI go to the next screen with the genre data
     public void getGenreFromFile(@NonNull File inputFile) {
+        processStarted = true;
         genres.clear();
+        mainScreen.startTextChanger();
         mainScreen.setButtonsEnabled(false);
         final int TERMINATION_TIMEOUT_SECONDS = 300;
         final int MAX_CONCURRENT_THREADS = 5; //this seems to be a good balance between having a fast application and not consuming too much ram
         Executor executor = Executors.newSingleThreadExecutor();
         Handler uiHandler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
-            processStarted = true;
-            startTextChanger();
             boolean terminatedSuccessfully;
             if(shutdownForcefully) {
                 cleanUp();
@@ -296,22 +291,7 @@ public class FileUploadController {
         return returnValue;
     }
 
-    public void startTextChanger() {
-        ScheduledExecutorService textChangerService = Executors.newSingleThreadScheduledExecutor();
-        textChangerService.scheduleAtFixedRate(() -> {
-            String newMessage;
-            do {
-                newMessage = getRandomEntryFromArray(screenMessages);
-            }while(newMessage.contentEquals(mainScreen.getCurrentInfoText()));
-            if(connectionAvailable && processStarted) {
-                mainScreen.setInfoText(newMessage);
-            }
-            if(!processStarted) {
-                textChangerService.shutdownNow();
-            }
-        },0L,5L, TimeUnit.SECONDS);
 
-    }
 
     public void stopConnectionChecker() {
         scheduledExecutorService.shutdownNow();
@@ -323,7 +303,7 @@ public class FileUploadController {
             if(executorService != null) {
                 executorService.shutdownNow();
             }
-            mainScreen.setInfoText(getRandomEntryFromArray(cancellingMessages));
+            mainScreen.setCancellingMessage();
             shutdownForcefully = true;
         }
     }

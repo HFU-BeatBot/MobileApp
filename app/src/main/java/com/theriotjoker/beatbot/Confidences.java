@@ -1,10 +1,11 @@
 package com.theriotjoker.beatbot;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class Confidences implements Serializable {
@@ -90,6 +91,7 @@ public class Confidences implements Serializable {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Confidences{" +

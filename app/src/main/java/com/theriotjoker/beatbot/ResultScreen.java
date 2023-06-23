@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -51,7 +50,7 @@ public class ResultScreen extends Fragment {
         HashMap<String, Double> hashMap = genre.getTopFiveGenres(); //The HashMap contains information in the following format {(REGGAE, 0.49), (METAL, 0.11), (POP, 0.01), ...}
         BarChart genreBarChart = binding.genreBarChart; //Get the bar chart from the screen (see xml)
         binding.backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(),genre.getImageResource(),null));
-        ArrayList<BarEntry> barEntryArrayList = new ArrayList<BarEntry>(); //Every entry of the chart is saved here, as an entry object
+        ArrayList<BarEntry> barEntryArrayList = new ArrayList<>(); //Every entry of the chart is saved here, as an entry object
         //an entry object contains the index, or position, of every entry, and then the double value of the entry
         int i = 0;
         for(Double d : hashMap.values()) {

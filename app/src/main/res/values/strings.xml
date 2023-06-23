@@ -19,4 +19,6 @@
     <string name="offline">Offline</string>
     <string name="online">Online</string>
     <string name="zero_seconds">0s</string>
+    <string name="carousel_imageview_description">This ImageView is used to show the different genres in a kind of carousel.</string>
+    <string name="bb_button_description">This can be used to record sounds to evaluate the genre.</string>
 </resources>

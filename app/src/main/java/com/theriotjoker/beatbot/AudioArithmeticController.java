@@ -5,16 +5,14 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class AudioArithmeticController {
-    private final File musicFile;
     private float[][] mfccValues;
     private final float[] magValues;
     private final JLibrosa librosa;
     private final long audioLength;
     public AudioArithmeticController(File f) throws FileFormatNotSupportedException, IOException, WavFileException {
-        this.musicFile = f;
         librosa = new JLibrosa();
         magValues = librosa.loadAndRead(f.getPath(),-1,-1);
-        audioLength = WavFile.openWavFile(musicFile).getDuration();
+        audioLength = WavFile.openWavFile(f).getDuration();
     }
     public long getAudioLength() {
         return audioLength;

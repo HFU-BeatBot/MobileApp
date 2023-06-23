@@ -83,7 +83,7 @@ public class FileUploadController {
                     }
                 }
             } catch (Exception e) {
-                writeErrorToScreen("The file could not be read.");
+                mainScreen.writeErrorToScreen("The file could not be read.");
             }
         }
         //if the name is null, we can at least display a part of the uri (which sometimes may be the name)
@@ -111,7 +111,7 @@ public class FileUploadController {
             }
             outputStream.flush();
         } catch (IOException e) {
-            writeErrorToScreen("The file could not be read...");
+            mainScreen.writeErrorToScreen("The file could not be read...");
             return null;
         }
         //the copied file needs to self delete when the app is closed
@@ -133,14 +133,14 @@ public class FileUploadController {
             File f = getFileObjectFromUri(uri);
             //If the file is corrupted, we stop
             if(f == null) {
-                writeErrorToScreen("The chosen file is corrupted...");
+                mainScreen.writeErrorToScreen("The chosen file is corrupted...");
                 cleanUp();
                 return;
             }
             //if the file is of an .mp3 format, it needs to be converted
             if(f.getName().endsWith(".mp3")) {
                 if(f.length() > MAX_FILE_SIZE_MP3) {
-                    writeErrorToScreen("The selected file is too large...");
+                    mainScreen.writeErrorToScreen("The selected file is too large...");
                     cleanUp();
                     return;
                 }
@@ -148,7 +148,7 @@ public class FileUploadController {
                     mainScreen.setConversionText();
                     f = convert(f.getPath());
                 } catch (JavaLayerException e) {
-                    writeErrorToScreen("The selected file could not be converted...");
+                    mainScreen.writeErrorToScreen("The selected file could not be converted...");
                     cleanUp();
                     return;
                 }
@@ -156,13 +156,13 @@ public class FileUploadController {
                 //if the file is .wav and it is larger than the max size, it gets thrown away
                 if(f.getName().endsWith(".wav")) {
                     if(f.length() > MAX_FILE_SIZE_WAV) {
-                        writeErrorToScreen("The selected file is too large...");
+                        mainScreen.writeErrorToScreen("The selected file is too large...");
                         cleanUp();
                         return;
                     }
                 } else {
                     //if the file extension isn't .wav or .mp3, then it is an unsupported format
-                    writeErrorToScreen("The selected file format is unsupported...");
+                    mainScreen.writeErrorToScreen("The selected file format is unsupported...");
                     cleanUp();
                     return;
                 }
@@ -204,7 +204,7 @@ public class FileUploadController {
             }
             final long audioLength = audioArithmeticController.getAudioLength();
             if(audioLength <= AUDIO_SNIPPET_DURATION) {
-                writeErrorToScreen("The audio duration is too short!");
+                mainScreen.writeErrorToScreen("The audio duration is too short!");
                 cleanUp();
                 return;
             }
@@ -230,10 +230,10 @@ public class FileUploadController {
             }
             if(shutdownForcefully || !terminatedSuccessfully || !connectionAvailable) {
                 if(!terminatedSuccessfully) {
-                    writeErrorToScreen("Conversion Failed: Timed out");
+                    mainScreen.writeErrorToScreen("Conversion Failed: Timed out");
                 }
                 if(!connectionAvailable) {
-                    writeErrorToScreen("Connection failed...");
+                    mainScreen.writeErrorToScreen("Connection failed...");
                 }
                 cleanUp();
                 return;
@@ -252,7 +252,7 @@ public class FileUploadController {
         try {
             audioArithmeticController = new AudioArithmeticController(inputFile);
         } catch (FileFormatNotSupportedException | IOException | WavFileException e) {
-            writeErrorToScreen("File could not be read."+e.getMessage());
+            mainScreen.writeErrorToScreen("File could not be read."+e.getMessage());
             return null;
         }
         return audioArithmeticController;
@@ -384,10 +384,7 @@ public class FileUploadController {
         return genre;
 
     }
-    private void writeErrorToScreen(String error) {
-        Handler uiHandler = new Handler(Looper.getMainLooper());
-        uiHandler.post(() -> Toast.makeText(mainScreen.getContext(), error, Toast.LENGTH_SHORT).show());
-    }
+
     //in this function we check if the connection works, the task is executed every X seconds to see if there is a connection
     //if there is no connection, the buttons get disabled and the user gets notified that there is no connection
     private void startConnectionChecker() {

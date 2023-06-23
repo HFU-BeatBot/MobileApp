@@ -213,7 +213,9 @@ public class FileUploadController {
             }
             executorService = Executors.newFixedThreadPool(MAX_CONCURRENT_THREADS);
             for(Runnable r : conversionTasks) {
-                executorService.execute(r);
+                if(!shutdownForcefully) {
+                    executorService.execute(r);
+                }
             }
             executorService.shutdown(); //we will not accept any further tasks
             try {
@@ -237,6 +239,13 @@ public class FileUploadController {
                 return;
             }
             //handler.post is used to update the UI when the process is done
+            while(MainActivity.isAppPaused()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             uiHandler.post(() -> {
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("GENRE", calculateAverageGenre());

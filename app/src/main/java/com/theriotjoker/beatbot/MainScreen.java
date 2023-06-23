@@ -62,7 +62,7 @@ public class MainScreen extends Fragment {
     //animationRunnable refers to the pulsating animation that is played when the user records sounds
     private final Runnable animationRunnable = new Runnable() {
 
-        //makes the pulsing animation for the "BB" Button when recording.
+        //makes the pulsing animation for the "recording button" Button when recording.
         @Override
         public void run() {
             pulsate(binding.pulseImage1,1000,3.0f);
@@ -131,7 +131,7 @@ public class MainScreen extends Fragment {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         requireActivity().getWindow().setBackgroundDrawable(container.getBackground());
         useFileButton = binding.useFileButton;
-        recordButton = binding.bbButton;
+        recordButton = binding.recordingbutton;
         progressBar = binding.progressBar;
         infoTextView = binding.infoTextView;
         onlineStatusTextView = binding.onlineStatus;
@@ -326,15 +326,15 @@ public class MainScreen extends Fragment {
 
     public void setButtonsEnabled(boolean isEnabled) {
         requireActivity().runOnUiThread(() -> {
-            setBBButtonEnabled(isEnabled);
+            setRecordButtonEnabled(isEnabled);
             setUseFileButtonEnabled(isEnabled);
         });
     }
-    private void setBBButtonEnabled(boolean isEnabled) {
+    private void setRecordButtonEnabled(boolean isEnabled) {
         if(!isEnabled) {
-            recordButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design_disabled));
+            recordButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.record_button_design_disabled));
         } else {
-            recordButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bb_button_design));
+            recordButton.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.record_button_design));
         }
         recordButton.setEnabled(isEnabled);
     }

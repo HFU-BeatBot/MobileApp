@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
@@ -15,7 +16,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
 import com.theriotjoker.beatbot.databinding.ActivityMainBinding;
 
 
@@ -27,6 +27,7 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
 
     private boolean pressedBackRecently = false;
+    private static boolean appPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,20 @@ public class MainActivity extends AppCompatActivity {
                             Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     123);
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        appPaused = true;
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        appPaused = false;
+    }
+    public static boolean isAppPaused() {
+        return appPaused;
     }
 
     //This function controls what happens when the back button is pressed

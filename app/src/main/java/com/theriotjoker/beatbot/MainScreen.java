@@ -4,13 +4,11 @@ package com.theriotjoker.beatbot;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +48,7 @@ public class MainScreen extends Fragment {
     private AnimationDrawable animationDrawable;
     private boolean recordingCooldown;
     private final static int[] drawableIds = {R.drawable.blues_1, R.drawable.classical_1, R.drawable.country_1,R.drawable.disco_1, R.drawable.hiphop_1, R.drawable.jazz_1, R.drawable.metal_1, R.drawable.pop_1, R.drawable.reggae_1, R.drawable.rock_1};
-    private static final String[] screenMessages = {"Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
+    private static final String[] conversionMessages = {"Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
     private static final String[] wavConversionMessages = {"WAVification Ritual Initiated: Crafting Audio Wonders", "Audio Alchemy: The Art of WAV Transformation", "WAV Transformation Unleashed", "Reshaping Files: Embracing the WAV Destiny", "Enveloping Files in WAV Magic", "Unleashing WAV Power: Converting your File", "Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
     private static final String[] cancellingMessages = {"Operation Halted: Returning to Base State", "Aborting Task: Resuming Regular Functions", "Mission Termination: Operation Aborted", "Emergency Shutdown: Cancelling Task","Cancelling Protocol Initiated: Halting Progress", "Ceasing Activity: Operation Discontinued", "Interrupting Mission: Returning to Default State", "Reversing Course: Cancelling Task Operations", "Aborting Mission: Resuming Regular Operations","Abruptly Aborting Mission", "Ceasing Operation", "Reversing Course: Operation Cancelled", "Halting Process, Returning to Normal", "Disengaging and Abandoning Mission", "Abort! Abort! Task Cancelled", "Mission Aborted: Napping Instead", "Eject Button Pressed"};
     private int animationImageChooser = 0;
@@ -61,6 +59,7 @@ public class MainScreen extends Fragment {
     private TextView onlineStatusTextView;
     private ImageView backgroundImage;
     final String timeInfo = "TIME ELAPSED: ";
+    //animationRunnable refers to the pulsating animation that is played when the user records sounds
     private final Runnable animationRunnable = new Runnable() {
 
         //makes the pulsing animation for the "BB" Button when recording.
@@ -71,18 +70,16 @@ public class MainScreen extends Fragment {
             handler.postDelayed(this, 1500);
         }
     };
+    //backgroundAnimationRunnable is responsible for the switching of the colors in the background when a process is happening
     private final Runnable backgroundAnimationRunnable = new Runnable() {
         final int ANIMATION_LENGTH_MILLISECONDS = 2000;
         @Override
         public void run() {
             if(getContext() != null) {
-                backgroundImage.animate().alpha(0.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS).withEndAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(getContext() != null) {
-                            backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), drawableIds[animationImageChooser], null));
-                            backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
-                        }
+                backgroundImage.animate().alpha(0.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS).withEndAction(() -> {
+                    if(getContext() != null) {
+                        backgroundImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), drawableIds[animationImageChooser], null));
+                        backgroundImage.animate().alpha(1.0f).setDuration(ANIMATION_LENGTH_MILLISECONDS);
                     }
                 });
                 handler.postDelayed(this, (int) (ANIMATION_LENGTH_MILLISECONDS * 2.5));
@@ -90,11 +87,10 @@ public class MainScreen extends Fragment {
             }
         }
     };
-
+    //more or less the constructor, everything gets initialized here
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setButtonsEnabled(false);
         setConnectionAvailable(false);
-
         super.onViewCreated(view, savedInstanceState);
         animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
         if(animationDrawable != null) {
@@ -126,6 +122,8 @@ public class MainScreen extends Fragment {
     public boolean isProcessStarted() {
         return fileUploadController.isProcessStarted();
     }
+    //the first part of the constructor, all variables get declared and initialized here
+    //and the buttons get defined as to what their usage should be
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         fileUploadController = new FileUploadController(this);
@@ -155,36 +153,38 @@ public class MainScreen extends Fragment {
         isRecording = false;
         return binding.getRoot();
     }
-
+    //this method creates a dialog for a file selection when the user selects a button
+    //it gets the name of the selected file and offers either "continue" or "cancel"
     private void buildDialogForFile(Intent result) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
         alertDialogBuilder.setMessage("You have chosen the following file: "+fileUploadController.getFileNameFromUri(result.getData())+". Do you want to upload it?")
-                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        startBackgroundAnimation();
-                        fileUploadController.getGenreFromUri(result.getData());
-                    }
+                .setPositiveButton("Continue", (dialogInterface, i) -> {
+                    startBackgroundAnimation();
+                    fileUploadController.getGenreFromUri(result.getData());
                 }).setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog messageDialog = alertDialogBuilder.create();
         messageDialog.show();
     }
+    //exit is called when the application closes, stopping all threads, etc.
     public void exit() {
         handler.removeCallbacks(backgroundAnimationRunnable);
         fileUploadController.stopConnectionChecker();
     }
+    //When the user is doing an action, the status message writes some messages to the screen
+    //to make sure that random messages are displayed from the array, this method gets a random entry from an array and returns it
     private String getRandomEntryFromArray(String[] array) {
         Random random = new Random();
         return array[random.nextInt(array.length)];
     }
-
+    //The text changer is a background thread which makes the loading process engaging by setting the
+    //loading text to a new message (chosen from the messages array [conversionMessages] from the top of this file
+    //every 5 seconds, to keep everything engaging
     public void startTextChanger() {
         ScheduledExecutorService textChangerService = Executors.newSingleThreadScheduledExecutor();
         textChangerService.scheduleAtFixedRate(() -> {
-            System.out.println("HEllo?");
             String newMessage;
             do {
-                newMessage = getRandomEntryFromArray(screenMessages);
+                newMessage = getRandomEntryFromArray(conversionMessages);
             }while(newMessage.contentEquals(getCurrentInfoText()));
             if(fileUploadController.isProcessStarted() && isConnectionAvailable) {
                 setInfoText(newMessage);
@@ -195,6 +195,7 @@ public class MainScreen extends Fragment {
         },0L,5L, TimeUnit.SECONDS);
 
     }
+    //starts the recording of audio, also editing the UI to let the user know that sound is being recorded
     private void startRecording() {
         backgroundImage.setVisibility(View.INVISIBLE);
         setUseFileButtonEnabled(false);
@@ -208,12 +209,14 @@ public class MainScreen extends Fragment {
         String info = timeInfo + "0s";
         infoTextView.setText(info);
     }
+    //if the process of analysis of a song is cancelled, this method cleans the UI up
     public void stopProcessUI() {
         removeInfoText();
         resetProgressBar();
         setBackgroundImageVisible(true);
         stopBackgroundAnimation();
     }
+    //analogous to the startRecording, this makes the app stop recording the sound
     public void stopRecording() {
         waveRecorder.stopRecording();
         stopPulsing();
@@ -228,14 +231,11 @@ public class MainScreen extends Fragment {
         requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show());
     }
     public void setBackgroundImageVisible(boolean visible) {
-        requireActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(visible && !fileUploadController.isProcessStarted() && !isRecording) {
-                    backgroundImage.setVisibility(View.VISIBLE);
-                } else {
-                    backgroundImage.setVisibility(View.INVISIBLE);
-                }
+        requireActivity().runOnUiThread(() -> {
+            if(visible && !fileUploadController.isProcessStarted() && !isRecording) {
+                backgroundImage.setVisibility(View.VISIBLE);
+            } else {
+                backgroundImage.setVisibility(View.INVISIBLE);
             }
         });
     }
@@ -245,15 +245,14 @@ public class MainScreen extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+    //the TimerUpdateRunnable is an object which takes care of displaying the time elapsed when recording
     private Runnable getTimerUpdateRunnable() {
         final int WARNING_INTERVAL_TIME = 15;
         return new Runnable() {
+            int secondsElapsed = 0;
             @Override
             public void run() {
                 if(isRecording) {
-                    String s = infoTextView.getText().toString();
-                    s = s.substring(timeInfo.length(),s.length()-1);
-                    int secondsElapsed = Integer.parseInt(s);
                     secondsElapsed++;
                     if(secondsElapsed > FileUploadController.MIN_RECORDING_DURATION) {
                         infoTextView.setTextColor(ResourcesCompat.getColor(getResources(),R.color.textColor,null));
@@ -294,7 +293,7 @@ public class MainScreen extends Fragment {
         return infoTextView.getText().toString();
     }
     private void pulsate(ImageView pulsatingImage, long duration, float scale){
-        //duration describes how fast the circle expand, scale describes its maximum size.
+        //duration describes how fast the circle expands, scale describes its maximum size.
         pulsatingImage.animate().alpha(0.0f).scaleX(scale).scaleY(scale).setDuration(duration).withEndAction(() ->
                 pulsatingImage.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(0)
         );
@@ -318,12 +317,7 @@ public class MainScreen extends Fragment {
         });
     }
     public void incrementProgressBar() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.incrementProgressBy(1);
-            }
-        });
+        handler.post(() -> progressBar.incrementProgressBy(1));
     }
     public void resetProgressBar() {
         progressBar.setVisibility(ProgressBar.INVISIBLE);
@@ -331,12 +325,9 @@ public class MainScreen extends Fragment {
     }
 
     public void setButtonsEnabled(boolean isEnabled) {
-        requireActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setBBButtonEnabled(isEnabled);
-                setUseFileButtonEnabled(isEnabled);
-            }
+        requireActivity().runOnUiThread(() -> {
+            setBBButtonEnabled(isEnabled);
+            setUseFileButtonEnabled(isEnabled);
         });
     }
     private void setBBButtonEnabled(boolean isEnabled) {
@@ -363,22 +354,19 @@ public class MainScreen extends Fragment {
     }
 
     public void setConnectionAvailable(boolean isOnline) {
-        requireActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                isConnectionAvailable = isOnline;
-                if(isOnline) {
-                    onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
-                    onlineStatusTextView.setText(R.string.online);
-                    setBackgroundImageVisible(true);
-                } else {
+        requireActivity().runOnUiThread(() -> {
+            isConnectionAvailable = isOnline;
+            if(isOnline) {
+                onlineStatusTextView.setTextColor(getResources().getColor(R.color.green, requireContext().getTheme()));
+                onlineStatusTextView.setText(R.string.online);
+                setBackgroundImageVisible(true);
+            } else {
 
-                    onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
-                    onlineStatusTextView.setText(R.string.offline);
-                    setBackgroundImageVisible(false);
-                    if(isRecording) {
-                        stopRecording();
-                    }
+                onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
+                onlineStatusTextView.setText(R.string.offline);
+                setBackgroundImageVisible(false);
+                if(isRecording) {
+                    stopRecording();
                 }
             }
         });
@@ -393,12 +381,7 @@ public class MainScreen extends Fragment {
         });
     }
     public void removeInfoText() {
-        requireActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                infoTextView.setVisibility(View.INVISIBLE);
-            }
-        });
+        requireActivity().runOnUiThread(() -> infoTextView.setVisibility(View.INVISIBLE));
     }
     public boolean isRecording() {
         return isRecording;

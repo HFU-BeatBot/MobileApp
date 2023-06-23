@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.OpenableColumns;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.navigation.fragment.NavHostFragment;
@@ -22,7 +21,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -185,7 +183,6 @@ public class FileUploadController {
     public void getGenreFromFile(@NonNull File inputFile) {
         processStarted = true;
         genres.clear();
-        mainScreen.startTextChanger();
         mainScreen.setButtonsEnabled(false);
         final int TERMINATION_TIMEOUT_SECONDS = 300;
         final int MAX_CONCURRENT_THREADS = 5; //this seems to be a good balance between having a fast application and not consuming too much ram
@@ -208,6 +205,7 @@ public class FileUploadController {
                 cleanUp();
                 return;
             }
+            mainScreen.startTextChanger();
             mainScreen.initializeProgressBar((int)audioLength/ AUDIO_SNIPPET_DURATION); //creating the progress bar
             ArrayList<Runnable> conversionTasks = new ArrayList<>(); //the list of tasks which will need to be executed, 1 task for every 5 seconds of a song
             for(int i = 0; i+ AUDIO_SNIPPET_DURATION < audioLength; i = i+ AUDIO_SNIPPET_DURATION) {

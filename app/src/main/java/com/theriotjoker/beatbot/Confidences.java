@@ -8,6 +8,15 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/*
+* This class is a kind of record class, the JSON answers get read, and objects of confidence values get created
+* this class saves the confidence values of each genre and has the ability to return the genres in a hashmap
+* where the key is the double value
+* The key is a Double object because when we sort the keys, we can get the corresponding values, so that we can get the top 5 genres
+*
+*  */
+
+
 public class Confidences implements Serializable {
     double[] confidenceArray;
     @SerializedName("Blues")

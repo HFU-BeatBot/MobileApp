@@ -114,7 +114,7 @@ public class Genre implements Serializable {
             case "FOLK":
                 topColor = 0xFFF59191;
                 middleColor = 0xFFE13610;
-                bottomColor = 0xFF8503;
+                bottomColor = 0xFFFF8503;
                 textColor = 0xFFF0F0F0;
                 imageResource = R.drawable.folk_1;
                 break;

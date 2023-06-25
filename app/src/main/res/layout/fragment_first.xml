@@ -9,15 +9,16 @@
 
     <ImageView
         android:id="@+id/backgroundImage"
-        android:layout_marginTop="16dp"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@string/carousel_imageview_description"
         app:layout_constraintBottom_toTopOf="@+id/progressBar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/carousel_imageview_description" />
+        app:layout_constraintVertical_bias="1.0" />
 
     <ImageView
         android:id="@+id/pulseImage2"
@@ -115,6 +116,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="I am a text" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/model_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/onlineStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/onlineStatus" />
+
+    <TextView
+        android:id="@+id/model_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/textColor"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/model_switch"
+        app:layout_constraintStart_toStartOf="@+id/model_switch"
+        app:layout_constraintTop_toBottomOf="@+id/model_switch" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
@@ -48,8 +50,8 @@ public class MainScreen extends Fragment {
     private AnimationDrawable animationDrawable;
     private boolean recordingCooldown;
     private final static int[] drawableIds = {R.drawable.electronic_1, R.drawable.experimental_1, R.drawable.folk_1, R.drawable.instrumental_1, R.drawable.international_1, R.drawable.blues_1, R.drawable.classical_1, R.drawable.country_1,R.drawable.disco_1, R.drawable.hiphop_1, R.drawable.jazz_1, R.drawable.metal_1, R.drawable.pop_1, R.drawable.reggae_1, R.drawable.rock_1};
-    private static final String[] conversionMessages = {"Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
-    private static final String[] wavConversionMessages = {"WAVification Ritual Initiated: Crafting Audio Wonders", "Audio Alchemy: The Art of WAV Transformation", "WAV Transformation Unleashed", "Reshaping Files: Embracing the WAV Destiny", "Enveloping Files in WAV Magic", "Unleashing WAV Power: Converting your File", "Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
+    private static final String[] conversionMessages = {"Did you know that you can see which genres a model can recognize? Just tap-hold the Model Text!","Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
+    private static final String[] wavConversionMessages = {"Did you know that you can see which genres a model can recognize? Just tap-hold the Model Text!", "WAVification Ritual Initiated: Crafting Audio Wonders", "Audio Alchemy: The Art of WAV Transformation", "WAV Transformation Unleashed", "Reshaping Files: Embracing the WAV Destiny", "Enveloping Files in WAV Magic", "Unleashing WAV Power: Converting your File", "Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
     private static final String[] cancellingMessages = {"Operation Halted: Returning to Base State", "Aborting Task: Resuming Regular Functions", "Mission Termination: Operation Aborted", "Emergency Shutdown: Cancelling Task","Cancelling Protocol Initiated: Halting Progress", "Ceasing Activity: Operation Discontinued", "Interrupting Mission: Returning to Default State", "Reversing Course: Cancelling Task Operations", "Aborting Mission: Resuming Regular Operations","Abruptly Aborting Mission", "Ceasing Operation", "Reversing Course: Operation Cancelled", "Halting Process, Returning to Normal", "Disengaging and Abandoning Mission", "Abort! Abort! Task Cancelled", "Mission Aborted: Napping Instead", "Eject Button Pressed"};
     private int animationImageChooser = 0;
     private boolean isConnectionAvailable = false;
@@ -59,6 +61,9 @@ public class MainScreen extends Fragment {
     private TextView infoTextView;
     private TextView onlineStatusTextView;
     private ImageView backgroundImage;
+    private SwitchCompat modelSwitch;
+    private TextView modelTextView;
+    private static boolean switchChecked = false;
     final String timeInfo = "TIME ELAPSED: ";
     //animationRunnable refers to the pulsating animation that is played when the user records sounds
     private final Runnable animationRunnable = new Runnable() {
@@ -118,6 +123,7 @@ public class MainScreen extends Fragment {
                 }
             }
         });
+
         animateBackgroundImage();
     }
 
@@ -138,6 +144,10 @@ public class MainScreen extends Fragment {
         infoTextView = binding.infoTextView;
         onlineStatusTextView = binding.onlineStatus;
         backgroundImage = binding.backgroundImage;
+        modelSwitch = binding.modelSwitch;
+        modelTextView = binding.modelTextView;
+        modelTextView.setTooltipText("Genres: Blues, Classical, Country, Disco, HipHop, Jazz, Metal, Pop, Reggae, Rock");
+        modelTextView.setText(R.string.model_gtzan);
         recordingCooldown = false;
         startActivityIntent = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -153,6 +163,22 @@ public class MainScreen extends Fragment {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 30000);
         }
         isRecording = false;
+        modelSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                switchChecked = isChecked;
+                if(isChecked) {
+                    fileUploadController.setModel_to_use(3);
+                    modelTextView.setText(R.string.model_fma);
+                    modelTextView.setTooltipText("Genres: Rock, Pop, HipHop, Electronic, Experimental, Instrumental, International, Folk");
+                } else {
+                    fileUploadController.setModel_to_use(2);
+                    modelTextView.setText(R.string.model_gtzan);
+                    modelTextView.setTooltipText("Genres: Blues, Classical, Country, Disco, HipHop, Jazz, Metal, Pop, Reggae, Rock");
+                }
+            }
+        });
+        modelSwitch.setChecked(switchChecked);
         return binding.getRoot();
     }
     //this method creates a dialog for a file selection when the user selects a button
@@ -214,7 +240,9 @@ public class MainScreen extends Fragment {
         resetProgressBar();
         setBackgroundImageVisible(true);
         stopBackgroundAnimation();
-        textChangerService.shutdownNow();
+        if(textChangerService != null) {
+            textChangerService.shutdownNow();
+        }
     }
     //analogous to the startRecording, this makes the app stop recording the sound
     public void stopRecording() {
@@ -328,7 +356,11 @@ public class MainScreen extends Fragment {
         requireActivity().runOnUiThread(() -> {
             setRecordButtonEnabled(isEnabled);
             setUseFileButtonEnabled(isEnabled);
+            setModelSwitchEnabled(isEnabled);
         });
+    }
+    private void setModelSwitchEnabled(boolean isEnabled) {
+        modelSwitch.setEnabled(isEnabled);
     }
     private void setRecordButtonEnabled(boolean isEnabled) {
         if(!isEnabled) {

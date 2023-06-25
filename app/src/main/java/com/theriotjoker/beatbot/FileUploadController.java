@@ -46,6 +46,7 @@ public class FileUploadController {
     private boolean shutdownForcefully = false;
     private final MainScreen mainScreen;
     private final ApiHandler apiHandler;
+    private int model_to_use = 2;
     //this list is used to save all api calls that failed due to the internet connection getting cut off
     private final ArrayList<String> apiCallStrings;
     //this executor service is used to start and stop the connection checking thread
@@ -172,6 +173,9 @@ public class FileUploadController {
             }
             getGenreFromFile(f);
         });
+    }
+    public void setModel_to_use(int model_to_use) {
+        this.model_to_use = model_to_use;
     }
     //Here is where the most important part of the application happens:
     //The function first creates an audioArithmeticController, which is an object that extracts the important
@@ -355,7 +359,7 @@ public class FileUploadController {
                 return;
             }
             String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_DURATION);
-            String apiCallString = "{\"model_to_use\":3,\"music_array\":"+musicValuesString+"}";
+            String apiCallString = "{\"model_to_use\":"+model_to_use+",\"music_array\":"+musicValuesString+"}";
             boolean success = callApiForGenre(apiCallString);
             if(!success && !shutdownForcefully) { //if the thread is interrupted at just the right time, callApiForGenre will throw an IOException named "thread interrupted" so we need to check if
                 //the thread was interrupted to stop the process and save the string

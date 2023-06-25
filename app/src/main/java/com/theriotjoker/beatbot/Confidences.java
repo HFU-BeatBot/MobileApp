@@ -18,37 +18,53 @@ import java.util.HashMap;
 
 
 public class Confidences implements Serializable {
-    double[] confidenceArray;
+
+    private final double[] confidenceArray;
     @SerializedName("Blues")
     @Expose
-    private final Double blues;
+    private final double blues;
     @SerializedName("Classical")
     @Expose
-    private final Double classical;
+    private final double classical;
     @SerializedName("Country")
     @Expose
-    private final Double country;
+    private final double country;
     @SerializedName("Disco")
     @Expose
-    private final Double disco;
+    private final double disco;
     @SerializedName("HipHop")
     @Expose
-    private final Double hipHop;
+    private final double hipHop;
     @SerializedName("Jazz")
     @Expose
-    private final Double jazz;
+    private final double jazz;
     @SerializedName("Metal")
     @Expose
-    private final Double metal;
+    private final double metal;
     @SerializedName("Pop")
     @Expose
-    private final Double pop;
+    private final double pop;
     @SerializedName("Reggae")
     @Expose
-    private final Double reggae;
+    private final double reggae;
     @SerializedName("Rock")
     @Expose
-    private final Double rock;
+    private final double rock;
+    @SerializedName("Electronic")
+    @Expose
+    private final double electronic;
+    @SerializedName("Experimental")
+    @Expose
+    private final double experimental;
+    @SerializedName("Folk")
+    @Expose
+    private final double folk;
+    @SerializedName("Instrumental")
+    @Expose
+    private final double instrumental;
+    @SerializedName("International")
+    @Expose
+    private final double international;
 
     public Confidences(double[] confidences) {
         this.blues = confidences[0];
@@ -61,10 +77,15 @@ public class Confidences implements Serializable {
         this.pop = confidences[7];
         this.reggae = confidences[8];
         this.rock = confidences[9];
-        confidenceArray = new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock};
+        this.electronic = confidences[10];
+        this.experimental = confidences[11];
+        this.folk = confidences[12];
+        this.instrumental = confidences[13];
+        this.international = confidences[14];
+        confidenceArray = new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock, electronic, experimental, folk, instrumental, international};
     }
     public double[] getConfidenceValues() {
-        return new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock};
+        return new double[]{blues, classical, country, disco, hipHop, jazz, metal, pop, reggae, rock, electronic, experimental, folk, instrumental, international};
     }
     public HashMap<Double, String> getConfidenceHashMap() {
         HashMap<Double, String> retVal = new HashMap<>();
@@ -74,7 +95,7 @@ public class Confidences implements Serializable {
         return retVal;
     }
     public String getStringNameOfGenre(int i) {
-        switch(i) {
+        switch (i) {
             case 0:
                 return "Blues".toUpperCase();
             case 1:
@@ -95,6 +116,16 @@ public class Confidences implements Serializable {
                 return "Reggae".toUpperCase();
             case 9:
                 return "Rock".toUpperCase();
+            case 10:
+                return "Electronic".toUpperCase();
+            case 11:
+                return "Experimental".toUpperCase();
+            case 12:
+                return "Folk".toUpperCase();
+            case 13:
+                return "Instrumental".toUpperCase();
+            case 14:
+                return "International".toUpperCase();
             default:
                 throw new IllegalArgumentException("Invalid genre index: " + i);
         }
@@ -114,6 +145,11 @@ public class Confidences implements Serializable {
                 ", pop=" + pop +
                 ", reggae=" + reggae +
                 ", rock=" + rock +
+                ", electronic=" + electronic +
+                ", experimental=" + experimental +
+                ", folk=" + folk +
+                ", instrumental=" + instrumental +
+                ", international=" + international +
                 '}';
     }
 }

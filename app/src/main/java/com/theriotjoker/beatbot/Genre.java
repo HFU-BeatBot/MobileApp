@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 public class Genre implements Serializable {
-
+    public static final int NUMBER_OF_POSSIBLE_GENRES = 15;
     @SerializedName("genre")
     @Expose
     private String genre;
@@ -26,6 +26,7 @@ public class Genre implements Serializable {
         genre = confidences.getStringNameOfGenre(getIndexOfMaxGenreConfidence());
         initializeThemeValues();
     }
+
     public void initializeThemeValues() {
         middleColor=0x00000000;
         this.genre = genre.toUpperCase();
@@ -91,6 +92,37 @@ public class Genre implements Serializable {
                 bottomColor = 0xFFFFFFFF;
                 textColor = 0xFFFFFFFF;
                 imageResource = R.drawable.metal_1;
+                break;
+            case "EXPERIMENTAL":
+                topColor = 0xFFE3BC9A;
+                bottomColor = 0xFFAF8291;
+                textColor = 0xFF000000;
+                imageResource = R.drawable.experimental_1;
+                break;
+            case "INSTRUMENTAL":
+                topColor = 0xFFC9F7FF;
+                bottomColor = 0xFF43C8FF;
+                textColor = 0xFF000000;
+                imageResource = R.drawable.instrumental_1;
+                break;
+            case "ELECTRONIC":
+                topColor = 0xFFF7FF00;
+                bottomColor = 0xFFFF00B3;
+                textColor = 0xFF000000;
+                imageResource = R.drawable.electronic_1;
+                break;
+            case "FOLK":
+                topColor = 0xFFF59191;
+                middleColor = 0xFFE13610;
+                bottomColor = 0xFF8503;
+                textColor = 0xFFF0F0F0;
+                imageResource = R.drawable.folk_1;
+                break;
+            case "INTERNATIONAL":
+                topColor = 0xFF4AA3D5;
+                bottomColor = 0xFF236215;
+                textColor = 0xFFF0F0F0;
+                imageResource = R.drawable.international_1;
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported Argument: "+genre);

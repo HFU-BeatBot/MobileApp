@@ -314,6 +314,9 @@ public class FileUploadController {
             shutdownForcefully = true;
         }
     }
+    public boolean isShutdownForcefully() {
+        return shutdownForcefully;
+    }
     //cleanUp is called every time the process finishes, regularly or irregularly
     //it cleans up the screen, resets the loading button, enables the buttons, etc.
     private void cleanUp() {
@@ -329,21 +332,20 @@ public class FileUploadController {
     //by iterating over every api answer, getting the genre confidence values array and adding them on top of the result array
     //in the end each value in the result array is divided by the sum of the probabilities (this is how you get the average of a percentage)
     private Genre calculateAverageGenre() {
-        double[] array = new double[10];
+        double[] avgGenreProbabilities = new double[Genre.NUMBER_OF_POSSIBLE_GENRES];
         for(Genre g : genres) {
-            if(g.getConfidences().getConfidenceValues() != null) { //in case the internet communication for some reason gets wrong packages, this becomes null and crashes the app
+            if(g.getConfidences() != null) { //in case the internet communication for some reason gets wrong packages, this becomes null and crashes the app
                 double[] confidenceValues = g.getConfidences().getConfidenceValues();
                 for(int i = 0; i < confidenceValues.length; i++) {
-                    array[i] = array[i]+confidenceValues[i];
+                    avgGenreProbabilities[i] = avgGenreProbabilities[i]+confidenceValues[i];
                 }
             }
         }
-        double sum = Arrays.stream(array).sum();
-        for(int i = 0; i < array.length; i++) {
-            array[i] = array[i] / sum;
+        double sum = Arrays.stream(avgGenreProbabilities).sum();
+        for(int i = 0; i < avgGenreProbabilities.length; i++) {
+            avgGenreProbabilities[i] = avgGenreProbabilities[i] / sum;
         }
-
-        return new Genre(new Confidences(array));
+        return new Genre(new Confidences(avgGenreProbabilities));
     }
     //this function returns a task for audio conversion and api calling
     //In essence, we get the MFCC features, turn that into a JSON String, ask the AI at the API end for a result, and we save the result in a variable
@@ -353,7 +355,7 @@ public class FileUploadController {
                 return;
             }
             String musicValuesString = audioArithmeticController.getStringMusicFeaturesFromFile(offset, AUDIO_SNIPPET_DURATION);
-            String apiCallString = "{\"model_to_use\":2,\"music_array\":"+musicValuesString+"}";
+            String apiCallString = "{\"model_to_use\":3,\"music_array\":"+musicValuesString+"}";
             boolean success = callApiForGenre(apiCallString);
             if(!success && !shutdownForcefully) { //if the thread is interrupted at just the right time, callApiForGenre will throw an IOException named "thread interrupted" so we need to check if
                 //the thread was interrupted to stop the process and save the string
@@ -387,7 +389,7 @@ public class FileUploadController {
     private Genre generateGenreFromJson(String json) {
         Gson gson = new Gson();
         Genre genre = gson.fromJson(json, Genre.class);
-        genre.initializeThemeValues();
+        System.out.println(genre.getConfidences());
         return genre;
 
     }

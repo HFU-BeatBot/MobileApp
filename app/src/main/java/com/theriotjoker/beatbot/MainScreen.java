@@ -47,12 +47,13 @@ public class MainScreen extends Fragment {
     private WaveRecorder waveRecorder;
     private AnimationDrawable animationDrawable;
     private boolean recordingCooldown;
-    private final static int[] drawableIds = {R.drawable.blues_1, R.drawable.classical_1, R.drawable.country_1,R.drawable.disco_1, R.drawable.hiphop_1, R.drawable.jazz_1, R.drawable.metal_1, R.drawable.pop_1, R.drawable.reggae_1, R.drawable.rock_1};
+    private final static int[] drawableIds = {R.drawable.electronic_1, R.drawable.experimental_1, R.drawable.folk_1, R.drawable.instrumental_1, R.drawable.international_1, R.drawable.blues_1, R.drawable.classical_1, R.drawable.country_1,R.drawable.disco_1, R.drawable.hiphop_1, R.drawable.jazz_1, R.drawable.metal_1, R.drawable.pop_1, R.drawable.reggae_1, R.drawable.rock_1};
     private static final String[] conversionMessages = {"Genre Anatomic Analysis in Progress","Harmonic Journey Commencing", "Unearthing Genre Gems", "Untangling the Genre Web", "Syncing with the Melodic Universe", "Melody Analysis in Progress", "Navigating the Sonic Spectrum", "Decoding Musical Vibes","Exploring Melodic Landscapes", "Unraveling the Musical Mysteries", "Unleashing the Genre Whisperer", "Prying into the Melodic Matrix", "Genre Radar Activated: Seek and Find", "Sonic Sherlock: Solving Genre Puzzles", "Peeking Behind the Melody Curtain", "Cracking the Genre Code","Getting the Response from the Future", "Melody Mapping in Progress", "Calling the Harmony Hackers", "Unlocking the Melodic Secrets","Decoding Musical DNA","Harmonic Archaeology in Progress"};
     private static final String[] wavConversionMessages = {"WAVification Ritual Initiated: Crafting Audio Wonders", "Audio Alchemy: The Art of WAV Transformation", "WAV Transformation Unleashed", "Reshaping Files: Embracing the WAV Destiny", "Enveloping Files in WAV Magic", "Unleashing WAV Power: Converting your File", "Shapeshifting your File to .WAV", "Transcending .MP3 to .WAV", "WAVification Process Commencing", "WAVifying the Audio Essence"};
     private static final String[] cancellingMessages = {"Operation Halted: Returning to Base State", "Aborting Task: Resuming Regular Functions", "Mission Termination: Operation Aborted", "Emergency Shutdown: Cancelling Task","Cancelling Protocol Initiated: Halting Progress", "Ceasing Activity: Operation Discontinued", "Interrupting Mission: Returning to Default State", "Reversing Course: Cancelling Task Operations", "Aborting Mission: Resuming Regular Operations","Abruptly Aborting Mission", "Ceasing Operation", "Reversing Course: Operation Cancelled", "Halting Process, Returning to Normal", "Disengaging and Abandoning Mission", "Abort! Abort! Task Cancelled", "Mission Aborted: Napping Instead", "Eject Button Pressed"};
     private int animationImageChooser = 0;
     private boolean isConnectionAvailable = false;
+    private ScheduledExecutorService textChangerService;
     private ImageButton recordButton;
     private Button useFileButton;
     private TextView infoTextView;
@@ -92,6 +93,7 @@ public class MainScreen extends Fragment {
         setButtonsEnabled(false);
         setConnectionAvailable(false);
         super.onViewCreated(view, savedInstanceState);
+
         animationDrawable = (AnimationDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.gradient_animation, null);
         if(animationDrawable != null) {
             animationDrawable.setEnterFadeDuration(10);
@@ -180,17 +182,14 @@ public class MainScreen extends Fragment {
     //loading text to a new message (chosen from the messages array [conversionMessages] from the top of this file
     //every 5 seconds, to keep everything engaging
     public void startTextChanger() {
-        ScheduledExecutorService textChangerService = Executors.newSingleThreadScheduledExecutor();
+        textChangerService = Executors.newSingleThreadScheduledExecutor();
         textChangerService.scheduleAtFixedRate(() -> {
             String newMessage;
             do {
                 newMessage = getRandomEntryFromArray(conversionMessages);
             }while(newMessage.contentEquals(getCurrentInfoText()));
-            if(fileUploadController.isProcessStarted() && isConnectionAvailable) {
+            if(fileUploadController.isProcessStarted() && isConnectionAvailable && !fileUploadController.isShutdownForcefully()) {
                 setInfoText(newMessage);
-            }
-            if(!fileUploadController.isProcessStarted()) {
-                textChangerService.shutdownNow();
             }
         },0L,5L, TimeUnit.SECONDS);
 
@@ -215,6 +214,7 @@ public class MainScreen extends Fragment {
         resetProgressBar();
         setBackgroundImageVisible(true);
         stopBackgroundAnimation();
+        textChangerService.shutdownNow();
     }
     //analogous to the startRecording, this makes the app stop recording the sound
     public void stopRecording() {

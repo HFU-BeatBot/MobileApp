@@ -22,7 +22,6 @@ public class AudioArithmeticController {
         float[] meanMFCCs = generateMeanMFCCValues();
         double[] standardDeviations = generateStandardDeviations();
         double[] apiCallArray = createArrayForApi(meanMFCCs,standardDeviations);
-        System.out.println(Arrays.toString(apiCallArray));
         return Arrays.toString(apiCallArray);
     }
     private double[] generateStandardDeviations() {

@@ -35,6 +35,7 @@ There is a status message in the upper right corner, notifying you if the server
 
 To analyze a song  with your microphone, press the big round button in the center of your screen, this will make the app record audio. The duration of your recording will be shown above the round button. The app needs at least 7 seconds of recording time to evaluate the audio and the accuracy increases with additional recording time. The maximum allowed time is about 200 seconds.
 To end the recording and start evaluation just press the button again. If the duration of the recording was sufficient, the app immediately starts to analyze the recorded audio. After that's done, you get presented with the result screen. The result screen shows the most represented genre along with 4 other top genres, represented by a bar diagram at the bottom of the screen.
+
 ![Filesystem Screen](Documentation/Screenshots/Screenshot_Recording.png)
 
 

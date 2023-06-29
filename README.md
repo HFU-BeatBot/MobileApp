@@ -27,6 +27,7 @@ To install the HFU-BeatBot on your Android Device you need to download **HFU-Bea
 
 First time use: When you open HFU-BeatBot for the first time, the app will ask you to allow the usage of the microphone and the access to your filesystem. In order for the app to work as expected, the app needs to receive the required permissions. 
 There is a status message in the upper right corner, notifying you if the server is online or offline. Should the server be offline, the buttons are greyed out and the app won't take input. There is also a switch in the upper left corner with which the used model (GTZAN / FMA) can be changed, the two models differ in the genres that they can recognize.
+
 ![Main Screen](Documentation/Screenshots/Screenshot_Main_Screen_Online_GTZAN.png)
 ![Main Screen](Documentation/Screenshots/Screenshot_MainScreen_Offline_FMA.png)
 

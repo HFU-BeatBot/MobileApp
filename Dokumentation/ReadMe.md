@@ -11,8 +11,8 @@ The FMA model recognizes the following genres: Electronic, Instrumental, Folk, E
 - [Installation](#installation)
 - [Usage](#usage)
 
-	- [Analyse a song by recording](#analyse-a-song-by-recording)
-	- [Analyse a song in your filesystem](#analyse-a-song-in-your-filesystem)
+	- [Analyze a song by recording](#analyse-a-song-by-recording)
+	- [Analyze a song in your filesystem](#analyse-a-song-in-your-filesystem)
 
 - [Internal Analyzing Process](#internal-analyzing-process)
 - [License](#license)

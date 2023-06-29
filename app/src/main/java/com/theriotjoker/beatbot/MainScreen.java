@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +33,7 @@ import androidx.fragment.app.Fragment;
 import com.theriotjoker.beatbot.databinding.FragmentFirstBinding;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -393,7 +395,7 @@ public class MainScreen extends Fragment {
                 onlineStatusTextView.setText(R.string.online);
                 setBackgroundImageVisible(true);
             } else {
-
+                onlineStatusTextView.setTooltipText("");
                 onlineStatusTextView.setTextColor(getResources().getColor(R.color.red, requireContext().getTheme()));
                 onlineStatusTextView.setText(R.string.offline);
                 setBackgroundImageVisible(false);
@@ -429,5 +431,14 @@ public class MainScreen extends Fragment {
 
     public void setCancellingMessage() {
         setInfoText(getRandomEntryFromArray(cancellingMessages));
+    }
+
+    public void setConnectionTooltip(String connectedTo) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                onlineStatusTextView.setTooltipText(connectedTo);
+            }
+        });
     }
 }

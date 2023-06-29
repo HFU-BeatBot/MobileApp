@@ -15,10 +15,10 @@
         android:contentDescription="@string/carousel_imageview_description"
         app:layout_constraintBottom_toTopOf="@+id/progressBar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <ImageView
         android:id="@+id/pulseImage2"
@@ -130,7 +130,7 @@
         android:id="@+id/model_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:textColor="@color/textColor"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="@+id/model_switch"

@@ -21,6 +21,6 @@
     <string name="zero_seconds">0s</string>
     <string name="carousel_imageview_description">This ImageView is used to show the different genres in a kind of carousel.</string>
     <string name="bb_button_description">This can be used to record sounds to evaluate the genre.</string>
-    <string name="model_gtzan">GTZAN</string>
-    <string name="model_fma">FMA</string>
+    <string name="model_gtzan">GTZAN⁽ⁱ⁾</string>
+    <string name="model_fma">FMA⁽ⁱ⁾</string>
 </resources>

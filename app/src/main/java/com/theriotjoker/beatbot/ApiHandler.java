@@ -10,7 +10,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 public class ApiHandler {
-    private static final String BEATBOT_API_URL = "http://gamers-galaxy.ddns.net:8000";
+    private int failedConnectionCounter = 0;
+    private static String BEATBOT_API_URL = "http://gamers-galaxy.ddns.net:8000";
     private static final String BEATBOT_SERVICE = "/process";
     public String sendPostToApi(String json) throws IOException {
         HttpURLConnection connection = prepareConnection();
@@ -36,15 +37,32 @@ public class ApiHandler {
         connection.setDoOutput(true);
         return connection;
     }
-    public static boolean testConnection() {
+    public boolean testConnection() {
+        if(failedConnectionCounter > 3) {
+            if(BEATBOT_API_URL.contentEquals("http://gamers-galaxy.ddns.net:8000")) {
+                BEATBOT_API_URL = "http://beatbot.informatik.hs-furtwangen.de:8000";
+            } else {
+                BEATBOT_API_URL = "http://gamers-galaxy.ddns.net:8000";
+            }
+            failedConnectionCounter = 0;
+        }
         try {
             URL connectionTestURl = new URL(BEATBOT_API_URL);
             HttpURLConnection connection = (HttpURLConnection) connectionTestURl.openConnection();
             connection.setConnectTimeout(1500);
             connection.connect();
+            failedConnectionCounter = 0;
             return true;
         } catch (IOException e) {
+            failedConnectionCounter++;
             return false;
+        }
+    }
+    public String connectedTo() {
+        if(BEATBOT_API_URL.contentEquals("http://gamers-galaxy.ddns.net:8000")) {
+            return "Connected to the main server";
+        } else {
+            return "Connected to the fallback server";
         }
     }
 }

@@ -280,9 +280,7 @@ public class FileUploadController {
                 try {
                     Thread.sleep(1000);
                     counter++;
-                } catch(InterruptedException ignored) {
-
-                }
+                } catch(InterruptedException ignored) {}
             }
             if(counter >= MAX_WAIT_TIME_SECS && !connectionAvailable) { //if we waited for long enough and the connection is still off, we go back without a result
                 apiCallStrings.clear();
@@ -405,7 +403,7 @@ public class FileUploadController {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             if(!Thread.currentThread().isInterrupted()) {
-                boolean connectionExists = ApiHandler.testConnection();
+                boolean connectionExists = apiHandler.testConnection();
                 if(!connectionExists && connectionAvailable) {
                     mainScreen.setConnectionAvailable(false);
                     if(!processStarted) {
@@ -415,6 +413,7 @@ public class FileUploadController {
                     connectionAvailable = false;
                 } else {
                     if(connectionExists && !connectionAvailable) {
+                        mainScreen.setConnectionTooltip(apiHandler.connectedTo());
                         mainScreen.setConnectionAvailable(true);
                         if(!processStarted) {
                             mainScreen.setBackgroundImageVisible(true);
